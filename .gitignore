@@ -1,0 +1,33 @@
+# --- Secrets: never commit ---
+.env
+.streamlit/secrets.toml
+
+# --- Data (too large for Git; download with Kaggle CLI, see README) ---
+data/raw/*
+data/interim/*
+data/processed/*
+!data/**/.gitkeep
+*.db
+*.sqlite
+
+# --- Model artifacts (rebuild with the notebooks) ---
+models/*
+!models/.gitkeep
+
+# --- Course materials (not ours to publish) ---
+Capstone Guide.pdf
+Python - Data Science and AI Skills.docx
+Python for Data and AI Batch 3 - Week on Week*.pdf
+
+# --- Python / Jupyter ---
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
