@@ -1,0 +1,162 @@
+feature,source,description,use_in_model
+SK_ID_CURR,Application,ID of loan in our sample,False
+TARGET,Application,"Target variable (1 - client with payment difficulties: he/she had late payment more than X days on at least one of the first Y installments of the loan in our sample, 0 - all other cases)",False
+NAME_CONTRACT_TYPE,Application,Identification if loan is cash or revolving,True
+CODE_GENDER,Application,Gender of the client,False
+FLAG_OWN_CAR,Application,Flag if the client owns a car,True
+FLAG_OWN_REALTY,Application,Flag if client owns a house or flat,True
+CNT_CHILDREN,Application,Number of children the client has,True
+AMT_INCOME_TOTAL,Application,Income of the client,True
+AMT_CREDIT,Application,Credit amount of the loan,True
+AMT_ANNUITY,Application,Loan annuity,True
+AMT_GOODS_PRICE,Application,For consumer loans it is the price of the goods for which the loan is given,True
+NAME_TYPE_SUITE,Application,Who was accompanying client when he was applying for the loan,True
+NAME_INCOME_TYPE,Application,"Clients income type (businessman, working, maternity leave,)",True
+NAME_EDUCATION_TYPE,Application,Level of highest education the client achieved,True
+NAME_FAMILY_STATUS,Application,Family status of the client,True
+NAME_HOUSING_TYPE,Application,"What is the housing situation of the client (renting, living with parents, ...)",True
+REGION_POPULATION_RELATIVE,Application,Normalized population of region where client lives (higher number means the client lives in more populated region),True
+OWN_CAR_AGE,Application,Age of client's car,True
+FLAG_MOBIL,Application,"Did client provide mobile phone (1=YES, 0=NO)",True
+FLAG_EMP_PHONE,Application,"Did client provide work phone (1=YES, 0=NO)",True
+FLAG_WORK_PHONE,Application,"Did client provide home phone (1=YES, 0=NO)",True
+FLAG_CONT_MOBILE,Application,"Was mobile phone reachable (1=YES, 0=NO)",True
+FLAG_PHONE,Application,"Did client provide home phone (1=YES, 0=NO)",True
+FLAG_EMAIL,Application,"Did client provide email (1=YES, 0=NO)",True
+OCCUPATION_TYPE,Application,What kind of occupation does the client have,True
+CNT_FAM_MEMBERS,Application,How many family members does client have,True
+REGION_RATING_CLIENT,Application,"Our rating of the region where client lives (1,2,3)",True
+REGION_RATING_CLIENT_W_CITY,Application,"Our rating of the region where client lives with taking city into account (1,2,3)",True
+WEEKDAY_APPR_PROCESS_START,Application,On which day of the week did the client apply for the loan,True
+HOUR_APPR_PROCESS_START,Application,Approximately at what hour did the client apply for the loan,True
+REG_REGION_NOT_LIVE_REGION,Application,"Flag if client's permanent address does not match contact address (1=different, 0=same, at region level)",True
+REG_REGION_NOT_WORK_REGION,Application,"Flag if client's permanent address does not match work address (1=different, 0=same, at region level)",True
+LIVE_REGION_NOT_WORK_REGION,Application,"Flag if client's contact address does not match work address (1=different, 0=same, at region level)",True
+REG_CITY_NOT_LIVE_CITY,Application,"Flag if client's permanent address does not match contact address (1=different, 0=same, at city level)",True
+REG_CITY_NOT_WORK_CITY,Application,"Flag if client's permanent address does not match work address (1=different, 0=same, at city level)",True
+LIVE_CITY_NOT_WORK_CITY,Application,"Flag if client's contact address does not match work address (1=different, 0=same, at city level)",True
+ORGANIZATION_TYPE,Application,Type of organization where client works,True
+EXT_SOURCE_1,Application,Normalized score from external data source,True
+EXT_SOURCE_2,Application,Normalized score from external data source,True
+EXT_SOURCE_3,Application,Normalized score from external data source,True
+APARTMENTS_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+BASEMENTAREA_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+YEARS_BEGINEXPLUATATION_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+YEARS_BUILD_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+COMMONAREA_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+ELEVATORS_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+ENTRANCES_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+FLOORSMAX_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+FLOORSMIN_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+LANDAREA_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+LIVINGAPARTMENTS_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+LIVINGAREA_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+NONLIVINGAPARTMENTS_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+NONLIVINGAREA_AVG,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+FONDKAPREMONT_MODE,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+HOUSETYPE_MODE,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+TOTALAREA_MODE,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+WALLSMATERIAL_MODE,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+EMERGENCYSTATE_MODE,Application,"Normalized information about building where the client lives, What is average (_AVG suffix), modus (_MODE suffix), median (_MEDI suffix) apartment size, common area, living area, age of building, number of elevators, number of entrances, state of the building, number of floor",True
+OBS_30_CNT_SOCIAL_CIRCLE,Application,How many observation of client's social surroundings with observable 30 DPD (days past due) default,True
+DEF_30_CNT_SOCIAL_CIRCLE,Application,How many observation of client's social surroundings defaulted on 30 DPD (days past due) ,True
+OBS_60_CNT_SOCIAL_CIRCLE,Application,How many observation of client's social surroundings with observable 60 DPD (days past due) default,True
+DEF_60_CNT_SOCIAL_CIRCLE,Application,How many observation of client's social surroundings defaulted on 60 (days past due) DPD,True
+FLAG_DOCUMENT_2,Application,Did client provide document 2,True
+FLAG_DOCUMENT_3,Application,Did client provide document 3,True
+FLAG_DOCUMENT_4,Application,Did client provide document 4,True
+FLAG_DOCUMENT_5,Application,Did client provide document 5,True
+FLAG_DOCUMENT_6,Application,Did client provide document 6,True
+FLAG_DOCUMENT_7,Application,Did client provide document 7,True
+FLAG_DOCUMENT_8,Application,Did client provide document 8,True
+FLAG_DOCUMENT_9,Application,Did client provide document 9,True
+FLAG_DOCUMENT_10,Application,Did client provide document 10,True
+FLAG_DOCUMENT_11,Application,Did client provide document 11,True
+FLAG_DOCUMENT_12,Application,Did client provide document 12,True
+FLAG_DOCUMENT_13,Application,Did client provide document 13,True
+FLAG_DOCUMENT_14,Application,Did client provide document 14,True
+FLAG_DOCUMENT_15,Application,Did client provide document 15,True
+FLAG_DOCUMENT_16,Application,Did client provide document 16,True
+FLAG_DOCUMENT_17,Application,Did client provide document 17,True
+FLAG_DOCUMENT_18,Application,Did client provide document 18,True
+FLAG_DOCUMENT_19,Application,Did client provide document 19,True
+FLAG_DOCUMENT_20,Application,Did client provide document 20,True
+FLAG_DOCUMENT_21,Application,Did client provide document 21,True
+AMT_REQ_CREDIT_BUREAU_HOUR,Application,Number of enquiries to Credit Bureau about the client one hour before application,True
+AMT_REQ_CREDIT_BUREAU_DAY,Application,Number of enquiries to Credit Bureau about the client one day before application (excluding one hour before application),True
+AMT_REQ_CREDIT_BUREAU_WEEK,Application,Number of enquiries to Credit Bureau about the client one week before application (excluding one day before application),True
+AMT_REQ_CREDIT_BUREAU_MON,Application,Number of enquiries to Credit Bureau about the client one month before application (excluding one week before application),True
+AMT_REQ_CREDIT_BUREAU_QRT,Application,Number of enquiries to Credit Bureau about the client 3 month before application (excluding one month before application),True
+AMT_REQ_CREDIT_BUREAU_YEAR,Application,Number of enquiries to Credit Bureau about the client one day year (excluding last 3 months before application),True
+DAYS_EMPLOYED_ANOM,Engineered,1 if DAYS_EMPLOYED was the 365243 placeholder (mostly pensioners),True
+AGE_YEARS,Engineered,Applicant age in years,True
+YEARS_EMPLOYED,Engineered,Years in current job (missing if not employed),True
+YEARS_SINCE_REGISTRATION,Engineered,Years since the applicant changed their registration,True
+YEARS_SINCE_ID_PUBLISH,Engineered,Years since the applicant changed the ID document used to apply,True
+YEARS_SINCE_PHONE_CHANGE,Engineered,Years since the applicant changed phone number,True
+CREDIT_TO_INCOME,Engineered,Loan amount / annual income,True
+ANNUITY_TO_INCOME,Engineered,Loan annuity (regular payment) / income,True
+CREDIT_TO_GOODS,Engineered,Loan amount / price of goods (>1 = borrowing extra),True
+CREDIT_TERM,Engineered,Loan amount / annuity (approx. number of payments),True
+INCOME_PER_PERSON,Engineered,Income / family members,True
+EXT_SOURCE_MEAN,Engineered,Average of available external scores,True
+EXT_SOURCE_MIN,Engineered,Lowest external score,True
+EXT_SOURCE_MAX,Engineered,Highest external score,True
+EXT_SOURCE_STD,Engineered,Spread of external scores,True
+EXT_SOURCE_N_MISSING,Engineered,Number of missing external scores (0-3),True
+EXT_SOURCE_1_MISSING,Engineered,1 if EXT_SOURCE_1 missing,True
+EXT_SOURCE_3_MISSING,Engineered,1 if EXT_SOURCE_3 missing,True
+AMT_GOODS_PRICE_MISSING,Engineered,1 if goods price missing,True
+EMPLOYED_TO_AGE,Engineered,Years employed / age,True
+N_DOCUMENTS,Engineered,Number of documents provided,True
+N_CONTACTS,Engineered,Number of contact details provided,True
+BUREAU_ENQUIRIES_YEAR,Engineered,Credit bureau enquiries in the year before applying,True
+BUR_N_LOANS,Credit bureau,Number of loans at other lenders,True
+BUR_N_ACTIVE,Credit bureau,Active loans at other lenders,True
+BUR_ACTIVE_SHARE,Credit bureau,Share of bureau loans still active,True
+BUR_N_BAD_DEBT,Credit bureau,Bureau loans marked bad debt,True
+BUR_N_CREDIT_TYPES,Credit bureau,Distinct credit types at other lenders,True
+BUR_YEARS_SINCE_LAST_LOAN,Credit bureau,Years since most recent bureau loan,True
+BUR_YEARS_SINCE_FIRST_LOAN,Credit bureau,Years since oldest bureau loan,True
+BUR_TOTAL_CREDIT,Credit bureau,Total credit at other lenders,True
+BUR_TOTAL_DEBT,Credit bureau,Total current debt at other lenders,True
+BUR_DEBT_TO_CREDIT,Credit bureau,Bureau debt / bureau credit (utilisation),True
+BUR_TOTAL_OVERDUE,Credit bureau,Total overdue amount at other lenders,True
+BUR_MAX_DAYS_OVERDUE,Credit bureau,Max days currently overdue at other lenders,True
+BUR_N_OVERDUE_NOW,Credit bureau,Bureau loans currently overdue,True
+BUR_N_PROLONGED,Credit bureau,Times bureau loans were prolonged,True
+BB_N_MONTHS,Bureau monthly balance,Months of bureau balance history,True
+BB_LATE_MONTH_SHARE,Bureau monthly balance,Share of bureau months past due,True
+BB_N_SEVERE_LATE_MONTHS,Bureau monthly balance,Bureau months 60+ days past due,True
+PREV_N_APPS,Previous applications,Previous Home Credit applications,True
+PREV_N_APPROVED,Previous applications,Previous applications approved,True
+PREV_N_REFUSED,Previous applications,Previous applications refused,True
+PREV_REFUSED_SHARE,Previous applications,Share of previous applications refused,True
+PREV_CANCELED_SHARE,Previous applications,Share of previous applications canceled,True
+PREV_AVG_AMT_APPLIED,Previous applications,Average amount applied for previously,True
+PREV_AVG_GRANTED_TO_APPLIED,Previous applications,Average granted / applied amount on previous applications,True
+PREV_AVG_TERM,Previous applications,Average term of previous loans,True
+PREV_YEARS_SINCE_LAST_DECISION,Previous applications,Years since last previous decision,True
+PREV_N_REFUSED_LAST_YEAR,Previous applications,Refusals in the last year,True
+INST_N_PAYMENTS,Installment payments,Past installments due,True
+INST_LATE_SHARE,Installment payments,Share of installments paid late or not paid,True
+INST_AVG_DAYS_LATE,Installment payments,Average days late per installment,True
+INST_MAX_DAYS_LATE,Installment payments,Most days late on one installment,True
+INST_UNDERPAID_SHARE,Installment payments,Share of installments underpaid,True
+INST_TOTAL_UNDERPAID,Installment payments,Total amount underpaid,True
+INST_LATE_SHARE_LAST_YEAR,Installment payments,Share of installments late in the last year,True
+POS_N_LOANS,POS / cash loans,Previous POS/cash loans,True
+POS_N_MONTHS,POS / cash loans,Months of POS/cash history,True
+POS_LATE_MONTH_SHARE,POS / cash loans,Share of POS/cash months past due,True
+POS_MAX_DPD,POS / cash loans,Max days past due on POS/cash loans,True
+POS_N_COMPLETED,POS / cash loans,Completed POS/cash loans,True
+CC_N_CARDS,Credit cards,Previous Home Credit cards,True
+CC_N_MONTHS,Credit cards,Months of card history,True
+CC_AVG_BALANCE,Credit cards,Average card balance,True
+CC_AVG_UTILISATION,Credit cards,Average card balance / limit,True
+CC_AVG_DRAWINGS,Credit cards,Average monthly card drawings,True
+CC_BELOW_MIN_PAYMENT_SHARE,Credit cards,Share of months paying below the minimum,True
+CC_LATE_MONTH_SHARE,Credit cards,Share of card months past due,True
+CC_MAX_DPD,Credit cards,Max days past due on cards,True
+HAS_BUREAU_HISTORY,Engineered,1 if the applicant has any credit bureau record,True
+HAS_PREV_APPLICATION,Engineered,1 if the applicant applied to Home Credit before,True

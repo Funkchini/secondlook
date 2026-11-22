@@ -39,11 +39,12 @@ data/raw/          Kaggle zip (not committed)
 data/interim/      cleaned tables, SQLite DB (not committed)
 data/processed/    model-ready features (not committed)
 notebooks/         01 EDA, 02 features, 03 modelling, ...
-src/secondlook/    reusable Python package (config, data loading, features, models)
+src/secondlook/    reusable Python package: data.py (load from zip), cleaning.py,
+                   sql_features.py (SQLite + SQL aggregations), features.py (pipeline)
 app/               Streamlit app (Home.py + pages/)
 models/            trained model files (not committed)
 reports/figures/   charts used in the README and pitch
-docs/              proposal and model card
+docs/              proposal, feature dictionary, model card
 ```
 
 ## Setup
@@ -52,6 +53,14 @@ docs/              proposal and model card
 pip install -r requirements.txt
 cp .env.example .env          # then add your ANTHROPIC_API_KEY
 ```
+
+Build the model-ready feature table (about 10 minutes the first time; creates a 2.3 GB SQLite database in `data/interim/` and `data/processed/features.parquet`):
+
+```bash
+cd src && python -m secondlook.features
+```
+
+Or run `notebooks/02_features.ipynb`, which does the same step by step with explanations.
 
 Run the app (once built):
 
