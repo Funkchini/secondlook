@@ -28,7 +28,9 @@ DECISION_STYLE = {
 @st.cache_resource(show_spinner="Loading the model...")
 def load_model():
     import lightgbm as lgb
-    booster = lgb.Booster(model_file=str(BUNDLE / "model.txt"))
+    # Load from a string with normalised line endings: a CRLF copy of the file (e.g. a Windows checkout) crashes LightGBM
+    model_str = (BUNDLE / "model.txt").read_bytes().decode("utf-8").replace("\r\n", "\n")
+    booster = lgb.Booster(model_str=model_str)
     meta = json.loads((BUNDLE / "model_meta.json").read_text())
     return booster, meta, Explainer(booster)
 
