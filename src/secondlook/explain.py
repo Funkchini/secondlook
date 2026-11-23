@@ -56,6 +56,26 @@ LABELS = {
     "WEEKDAY_APPR_PROCESS_START": "Day of week applied", "HOUR_APPR_PROCESS_START": "Hour of day applied",
     "CNT_CHILDREN": "Number of children", "CNT_FAM_MEMBERS": "Family size", "TOTALAREA_MODE": "Home building size",
     "YEARS_BEGINEXPLUATATION_AVG": "Home building age (normalised)", "YEARS_BUILD_AVG": "Year home building was built (normalised)",
+    "FLAG_OWN_REALTY": "Owns a house or flat", "NAME_TYPE_SUITE": "Who came with the applicant",
+    "FLAG_MOBIL": "Gave a mobile number", "FLAG_EMP_PHONE": "Gave an employer phone number", "FLAG_WORK_PHONE": "Gave a work landline",
+    "FLAG_CONT_MOBILE": "Mobile number was reachable", "FLAG_PHONE": "Gave a home phone", "FLAG_EMAIL": "Gave an email address",
+    "REG_REGION_NOT_LIVE_REGION": "Lives outside registered region", "REG_REGION_NOT_WORK_REGION": "Works outside registered region",
+    "LIVE_REGION_NOT_WORK_REGION": "Works in a different region from home", "REG_CITY_NOT_LIVE_CITY": "Lives outside registered city",
+    "REG_CITY_NOT_WORK_CITY": "Works outside registered city", "LIVE_CITY_NOT_WORK_CITY": "Works in a different city from home",
+    "OBS_30_CNT_SOCIAL_CIRCLE": "Social circle: people observed 30+ days late", "DEF_30_CNT_SOCIAL_CIRCLE": "Social circle: people who defaulted (30 days)",
+    "OBS_60_CNT_SOCIAL_CIRCLE": "Social circle: people observed 60+ days late", "DEF_60_CNT_SOCIAL_CIRCLE": "Social circle: people who defaulted (60 days)",
+    "AMT_REQ_CREDIT_BUREAU_HOUR": "Credit enquiries in the last hour", "AMT_REQ_CREDIT_BUREAU_DAY": "Credit enquiries in the last day",
+    "AMT_REQ_CREDIT_BUREAU_WEEK": "Credit enquiries in the last week", "AMT_REQ_CREDIT_BUREAU_MON": "Credit enquiries in the last month",
+    "AMT_REQ_CREDIT_BUREAU_QRT": "Credit enquiries in the last 3 months", "AMT_REQ_CREDIT_BUREAU_YEAR": "Credit enquiries in the last year",
+    "EXT_SOURCE_1_MISSING": "External credit score 1 not available", "EXT_SOURCE_3_MISSING": "External credit score 3 not available",
+    "AMT_GOODS_PRICE_MISSING": "Price of goods not given", "N_CONTACTS": "Contact details provided",
+    "BUR_N_BAD_DEBT": "Loans marked bad debt at other lenders", "BUR_N_CREDIT_TYPES": "Types of credit at other lenders",
+    "BUR_TOTAL_OVERDUE": "Amount overdue at other lenders", "BUR_N_OVERDUE_NOW": "Loans overdue now at other lenders",
+    "BUR_N_PROLONGED": "Times other loans were extended", "BB_N_MONTHS": "Months of history at other lenders",
+    "BB_N_SEVERE_LATE_MONTHS": "Months 60+ days late at other lenders", "PREV_N_APPS": "Number of past applications",
+    "PREV_CANCELED_SHARE": "Share of past applications cancelled", "POS_MAX_DPD": "Most days late on store/cash loans",
+    "CC_N_CARDS": "Number of past credit cards", "CC_BELOW_MIN_PAYMENT_SHARE": "Share of months paying below card minimum",
+    "CC_MAX_DPD": "Most days late on credit card", "HAS_PREV_APPLICATION": "Applied here before",
 }
 
 # Loan terms the applicant can realistically change: the levers for a "path to approval".
@@ -130,6 +150,12 @@ class Explainer:
         base = self.tree.expected_value
         self.base_value = float(np.ravel(base)[-1])   # log-odds of the average applicant (class 1)
 
+    def predict_pd(self, X: pd.DataFrame) -> np.ndarray:
+        """PD from either the scikit-learn LGBMClassifier or a plain LightGBM Booster (used by the app)."""
+        if hasattr(self.model, "predict_proba"):
+            return self.model.predict_proba(X)[:, 1]
+        return self.model.predict(X)
+
     def shap_values(self, X: pd.DataFrame) -> np.ndarray:
         """SHAP values in log-odds, one column per feature."""
         sv = self.tree.shap_values(X)
@@ -153,7 +179,7 @@ class Explainer:
             "category": [category_of(f) for f in X_row.columns],
         })
         table["direction"] = np.where(table["shap"] > 0, "raises risk", "lowers risk")
-        pd_hat = float(self.model.predict_proba(X_row)[:, 1][0])
+        pd_hat = float(self.predict_pd(X_row)[0])
         return {
             "pd": pd_hat,
             "log_odds": self.base_value + sv.sum(),

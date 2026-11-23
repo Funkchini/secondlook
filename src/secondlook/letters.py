@@ -200,25 +200,28 @@ def _client() -> anthropic.Anthropic:
     return anthropic.Anthropic()
 
 
-def _load_cache() -> dict:
-    return json.loads(CACHE_PATH.read_text(encoding="utf-8")) if CACHE_PATH.exists() else {}
+def _load_cache(path=None) -> dict:
+    path = path or CACHE_PATH
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
-def _save_cache(cache: dict) -> None:
-    CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CACHE_PATH.write_text(json.dumps(cache, indent=2, ensure_ascii=False), encoding="utf-8")
+def _save_cache(cache: dict, path=None) -> None:
+    path = path or CACHE_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(cache, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def cache_key(li: LetterInput) -> str:
     return f"{li.applicant_id}|{li.decision}|{PROMPT_VERSION}|{MODEL}"
 
 
-def generate_letter(li: LetterInput, use_cache: bool = True, max_attempts: int = 2) -> dict:
+def generate_letter(li: LetterInput, use_cache: bool = True, max_attempts: int = 2, cache_path=None) -> dict:
     """Draft (or fetch from cache) a checked letter for one applicant.
 
     Returns a dict with the letter fields, the check results, attempts, token usage and cost.
+    cache_path: optional JSON file to use instead of the default cache (the app uses its own).
     """
-    cache = _load_cache() if use_cache else {}
+    cache = _load_cache(cache_path) if use_cache else {}
     key = cache_key(li)
     if key in cache:
         return {**cache[key], "from_cache": True}
@@ -260,7 +263,7 @@ def generate_letter(li: LetterInput, use_cache: bool = True, max_attempts: int =
         "fact_sheet": asdict(li),
     }
     if use_cache:
-        cache = _load_cache()
+        cache = _load_cache(cache_path)
         cache[key] = result
-        _save_cache(cache)
+        _save_cache(cache, cache_path)
     return {**result, "from_cache": False}
