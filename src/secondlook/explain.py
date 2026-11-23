@@ -114,7 +114,9 @@ def format_value(feature: str, value) -> str:
         return f"{value:.2f}"
     if feature in ("CREDIT_TO_INCOME", "CREDIT_TO_GOODS", "ANNUITY_TO_INCOME", "PREV_AVG_GRANTED_TO_APPLIED"):
         return f"{value:.2f}x"
-    if "YEARS" in feature or feature == "CREDIT_TERM":
+    if feature in ("CREDIT_TERM", "PREV_AVG_TERM"):
+        return f"about {value:.0f} payments"
+    if "YEARS" in feature:
         return f"{value:.1f}"
     return f"{value:,.0f}" if float(value).is_integer() else f"{value:,.2f}"
 
