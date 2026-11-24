@@ -1,0 +1,146 @@
+{
+ "agent_version": "v2",
+ "model": "claude-haiku-5-5",
+ "runs": {
+  "1": {
+   "answer": "The approval rate for thin-file applicants (no credit bureau record) is 82.7%, meaning 7,258 of 8,776 were approved. For comparison, applicants with a bureau record were approved at 89.1% (46,982 of 52,727), so thin-file applicants are approved at a lower rate, by about 6.4 percentage points.",
+   "steps": [
+    {
+     "tool": "run_sql",
+     "input": {
+      "query": "SELECT has_bureau_record, COUNT(*) AS applicants, SUM(CASE WHEN decision='approve' THEN 1 ELSE 0 END) AS approved, ROUND(1.0*SUM(CASE WHEN decision='approve' THEN 1 ELSE 0 END)/COUNT(*),4) AS approval_rate FROM portfolio GROUP BY has_bureau_record"
+     },
+     "result": "has_bureau_record,applicants,approved,approval_rate\r\n0,8776,7258,0.827\r\n1,52727,46982,0.891\r\n",
+     "is_error": false
+    }
+   ],
+   "cost_usd": 0.000671
+  },
+  "2": {
+   "answer": "There are 2,611 applicants under review, and 2,082 of them repaid, a repayment share of 79.7%.\n\nThis is the share of all applicants under review who had no payment difficulties. The data does not show what happened to the other 529, beyond the fact that they had payment difficulties.",
+   "steps": [
+    {
+     "tool": "run_sql",
+     "input": {
+      "query": "SELECT COUNT(*) AS under_review_count, SUM(CASE WHEN defaulted = 0 THEN 1 ELSE 0 END) AS repaid_count, ROUND(1.0 * SUM(CASE WHEN defaulted = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS repaid_share FROM portfolio WHERE decision = 'under_review'"
+     },
+     "result": "under_review_count,repaid_count,repaid_share\r\n2611,2082,0.7974\r\n",
+     "is_error": false
+    }
+   ],
+   "cost_usd": 0.000659
+  },
+  "3": {
+   "answer": "The \"Newer job, clean record\" persona has the most repayers among applicants we don't approve: 2,127 of its 2,983 not-approved applicants repaid (about 71.3%).\n\nFor comparison, the other personas' repayer counts are:\n- Thin file: 965\n- Big loan for the income: 770\n- Missed payments before: 746\n- Long job, many past loans: 573\n\nThese counts cover applicants with a decision of under review or decline.",
+   "steps": [
+    {
+     "tool": "run_sql",
+     "input": {
+      "query": "SELECT persona, COUNT(*) AS not_approved, SUM(CASE WHEN defaulted = 0 THEN 1 ELSE 0 END) AS repayers FROM portfolio WHERE decision IN ('under_review','decline') AND persona IS NOT NULL GROUP BY persona ORDER BY repayers DESC"
+     },
+     "result": "persona,not_approved,repayers\r\n\"Newer job, clean record\",2983,2127\r\nThin file,1347,965\r\nBig loan for the income,1057,770\r\nMissed payments before,1066,746\r\n\"Long job, many past loans\",810,573\r\n",
+     "is_error": false
+    }
+   ],
+   "cost_usd": 0.000739
+  },
+  "4": {
+   "answer": "About 5.3% of the loans we approve end in payment difficulties. Of the 54,240 approved applicants in the test portfolio, 2,883 defaulted, and the remaining 94.7% repaid.",
+   "steps": [
+    {
+     "tool": "run_sql",
+     "input": {
+      "query": "SELECT COUNT(*) AS approved_applicants, SUM(defaulted) AS defaulted_approved, ROUND(100.0 * SUM(defaulted) / COUNT(*), 1) AS default_rate_pct FROM portfolio WHERE decision = 'approve'"
+     },
+     "result": "approved_applicants,defaulted_approved,default_rate_pct\r\n54240,2883,5.3\r\n",
+     "is_error": false
+    }
+   ],
+   "cost_usd": 0.000641
+  },
+  "5": {
+   "answer": "About 9.2% of applicants who actually repaid were not approved: 5,181 of the 56,538 repayers. Those are the people the model placed in \"under review\" or \"decline\", so the model turned away a small share of borrowers who would have paid back.",
+   "steps": [
+    {
+     "tool": "run_sql",
+     "input": {
+      "query": "SELECT COUNT(*) AS repayers, SUM(CASE WHEN decision IN ('under_review','decline') THEN 1 ELSE 0 END) AS repayers_not_approved, ROUND(100.0 * SUM(CASE WHEN decision IN ('under_review','decline') THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_not_approved FROM portfolio WHERE defaulted = 0"
+     },
+     "result": "repayers,repayers_not_approved,pct_not_approved\r\n56538,5181,9.2\r\n",
+     "is_error": false
+    }
+   ],
+   "cost_usd": 0.000688
+  },
+  "6": {
+   "answer": "The 20-29 age band has the lowest approval rate: **79.2%** of its 8,905 applicants are approved at the 0.17 cutoff.\n\n| Age band | Applicants | Approval rate | Four-fifths ratio |\n|---|---|---|---|\n| 20-29 | 8,905 | 79.2% | 0.82 |\n| 30-39 | 16,487 | 84.2% | 0.87 |\n| 40-49 | 15,303 | 89.3% | 0.93 |\n| 50-59 | 13,617 | 93.3% | 0.97 |\n| 60-69 | 7,191 | 96.4% | 1.00 |\n\nThe 20-29 ratio of 0.82 is above the 0.8 four-fifths line, though only just. The gap between 20-29 and the highest-approving band (60-69) is 17.3 percentage points, and the bootstrap interval shows this gap is real.",
+   "steps": [
+    {
+     "tool": "fairness_summary",
+     "input": {
+      "group": "age_band"
+     },
+     "result": "{\"grouping\": \"age_band\", \"cutoff\": 0.17, \"bootstrap_resamples\": 1000, \"note\": \"Rates and gaps are fractions (0.0415 = 4.15 percentage points). Gender is not a model input and never was.\", \"groups\": [{\"Group\": \"20-29\", \"Applicants\": 8905, \"Default rate\": 0.11297, \"Approval rate\": 0.79158, \"Approval rate of repayers\": 0.83112, \"Default rate of approved\": 0.06866, \"Mean predicted PD\": 0.11266, \"Four-fifths ratio\": 0.8208}, {\"Group\": \"30-39\", \"Applicants\": 16487, \"Default rate\": 0.09571, \"Approval rate\": 0.84206, \"Approval rate of repayers\": 0.87638, \"Default rate of approved\": 0.05885, \"Mean predicted PD\": 0.09401, \"Four-fifths ratio\": 0.87314}, {\"Group\": \"40-49\", \"Applicants\": 15303, \"Default rate\": 0.0758, \"Approval rate\": 0.8929, \"Approval rate of repayers\": 0.91763, \"Default rate of approved\": 0.0502, \"Mean predicted PD\": 0.07533, \"Four-fifths ratio\": 0.92586}, {\"Group\": \"50-59\", \"Applicants\": 13617, \"Default rate\": 0.06345, \"Approval rate\": 0.93332, \"Approval rate of repayers\": 0.94919, \"Default rate of approved\": 0.04753, \"Mean predicted PD\": 0.06071, \"Four-fifths ratio\": 0.96777}, {\"Group\": \"60-69\", \"Applicants\": 7191, \"Default rate\": 0.04965, \"Approval rate\": 0.9644, \"Approval rate of repayers\": 0.97205, \"Default rate of approved\": 0.04211, \"Mean predicted PD\": 0.04803, \"Four-fifths ratio\": 1.0}], \"gaps_best_vs_worst_group\": [{\"Comparison\": \"60-69 vs 20-29\", \"Metric\": \"Approval rate\", \"Gap\": 0.17282, \"95% CI low\": 0.16369, \"95% CI high\": 0.18282, \"Real (CI excludes no gap)\": true}, {\"Comparison\": \"60-69 vs 20-29\", \"Metric\": \"Approval rate of repayers\", \"Gap\": 0.14093, \"95% CI low\": 0.13239, \"95% CI high\": 0.1501, \"Real (CI excludes no gap)\": true}, {\"Comparison\": \"60-69 vs 20-29\", \"Metric\": \"Default rate of approved\", \"Gap\": -0.02656, \"95% CI low\": -0.03406, \"95% CI high\": -0.01916, \"Real (CI excludes no gap)\": true}, {\"Comparison\": \"60-69 vs 20-29\", \"Metric\": \"Four-fifths ratio\", \"Gap\": 0.8208, \"95% CI low\": 0.81112, \"95% CI high\": 0.8297, \"Real (CI excludes no gap)\": true}], \"retrain_without_sensitive_features\": {\"dropped\": [\"AGE_YEARS\", \"EMPLOYED_TO_AGE\", \"NAME_FAMILY_STATUS\", \"CNT_CHILDREN\", \"CNT_FAM_MEMBERS\"], \"note\": \"Gender was already excluded from both models.\", \"models\": {\"Shipped, cutoff 0.17\": {\"ROC AUC\": 0.78642, \"Cutoff\": 0.17, \"Approval rate\": 0.88191, \"Profit (billions)\": 3.67897, \"Age band: Approval rate of repayers gap\": 0.14093, \"Age band: Approval rate of repayers CI\": [0.13239, 0.1501], \"Age band: Four-fifths ratio\": 0.8208, \"Age band: Four-fifths ratio CI\": [0.81112, 0.8297]}, \"Without sensitive, cutoff 0.17\": {\"ROC AUC\": 0.78494, \"Cutoff\": 0.17, \"Approval rate\": 0.88116, \"Profit (billions)\": 3.67347, \"Age band: Approval rate of repayers gap\": 0.16338, \"Age band: Approval rate of repayers CI\": [0.15456, 0.1728], \"Age band: Four-fifths ratio\": 0.79741, \"Age band: Four-fifths ratio CI\": [0.78798, 0.80596]}, \"Without sensitive, cutoff 0.2 (its best)\": {\"ROC AUC\": 0.78494, \"Cutoff\": 0.2, \"Approval rate\": 0.90961, \"Profit (billions)\": 3.68575, \"Age band: Approval rate of repayers gap\": 0.12448, \"Age band: Approval rate of repayers CI\": [0.11605, 0.13243], \"Age band: Four-fifths ratio\": 0.8418, \"Age band: Four-fifths ratio CI\": [0.83383, 0.85017]}, \"Shipped, cutoff 0.2 (reference)\": {\"ROC AUC\": 0.78642, \"Cutoff\": 0.2, \"Approval rate\": 0.91026, \"Profit (billions)\": 3.67287, \"Age band: Approval rate of repayers gap\": 0.10831, \"Age band: Approval rate of repayers CI\": [0.10044, 0.11617], \"Age band: Four-fifths ratio\": 0.86062, \"Age band: Four-fifths ratio CI\": [0.85231, 0.86871]}}}, \"decision\": \"Ship the model with all features: removing the sensitive features cost accuracy and widened the age gap (ages 20-29 fell below the four-fifths line) because the model overstated young applicants' risk.\"}",
+     "is_error": false
+    }
+   ],
+   "cost_usd": 0.000945
+  },
+  "7": {
+   "answer": "About 31.3% of declined applicants have a path to approval: 1,456 of the 4,652 applicants with a decline decision. The remaining declined applicants have no path, meaning no smaller loan or longer repayment schedule within the tested range would get them approved.\n\nThis excludes the 2,611 applicants in the under-review band.",
+   "steps": [
+    {
+     "tool": "run_sql",
+     "input": {
+      "query": "SELECT COUNT(*) AS declined, SUM(CASE WHEN has_path = 1 THEN 1 ELSE 0 END) AS with_path, ROUND(100.0 * SUM(CASE WHEN has_path = 1 THEN 1 ELSE 0 END) / COUNT(*), 1) AS share_with_path_pct FROM portfolio WHERE decision = 'decline'"
+     },
+     "result": "declined,with_path,share_with_path_pct\r\n4652,1456,31.3\r\n",
+     "is_error": false
+    }
+   ],
+   "cost_usd": 0.000708
+  },
+  "8": {
+   "answer": "On average, approved applicants asked for a larger loan than applicants we don't approve: about 608,201 versus about 519,934, a difference of roughly 88,267 (amounts have no stated currency).\n\nSupporting counts:\n\n| Group | Applicants | Average loan amount |\n|---|---|---|\n| Approved | 54,240 | 608,201 |\n| Not approved (under review or declined) | 7,263 | 519,934 |",
+   "steps": [
+    {
+     "tool": "run_sql",
+     "input": {
+      "query": "SELECT CASE WHEN decision = 'approve' THEN 'Approved' ELSE 'Not approved' END AS grp, COUNT(*) AS applicants, ROUND(AVG(loan_amount),2) AS avg_loan_amount FROM portfolio GROUP BY grp"
+     },
+     "result": "grp,applicants,avg_loan_amount\r\nApproved,54240,608201\r\nNot approved,7263,519934\r\n",
+     "is_error": false
+    }
+   ],
+   "cost_usd": 0.000661
+  },
+  "9": {
+   "answer": "Women who repaid were approved **4.2 percentage points more often** than men who repaid (92.2% vs 88.1%). In relative terms, that is about 4.7% more. The gap is statistically real: the 95% bootstrap interval runs from 3.6 to 4.7 points and does not include zero.\n\n| Group (repayers only) | Approval rate |\n|---|---|\n| Female | 92.2% |\n| Male | 88.1% |\n\nGender was not a model input. The audit also tested a model retrained without the sensitive features (age, family status, number of children). The gap barely moved, from 4.2 to 4.2 points at the 0.17 cutoff, so removing those features did not close it. The team chose to ship the model with all features.",
+   "steps": [
+    {
+     "tool": "fairness_summary",
+     "input": {
+      "group": "gender"
+     },
+     "result": "{\"grouping\": \"gender\", \"cutoff\": 0.17, \"bootstrap_resamples\": 1000, \"note\": \"Rates and gaps are fractions (0.0415 = 4.15 percentage points). Gender is not a model input and never was.\", \"groups\": [{\"Group\": \"Female\", \"Applicants\": 40561, \"Default rate\": 0.06992, \"Approval rate\": 0.90126, \"Approval rate of repayers\": 0.9222, \"Default rate of approved\": 0.04831, \"Mean predicted PD\": 0.07234, \"Four-fifths ratio\": 1.0}, {\"Group\": \"Male\", \"Applicants\": 20940, \"Default rate\": 0.10167, \"Approval rate\": 0.84446, \"Approval rate of repayers\": 0.88065, \"Default rate of approved\": 0.06317, \"Mean predicted PD\": 0.09283, \"Four-fifths ratio\": 0.93698}], \"gaps_best_vs_worst_group\": [{\"Comparison\": \"Female vs Male\", \"Metric\": \"Approval rate\", \"Gap\": 0.0568, \"95% CI low\": 0.05112, \"95% CI high\": 0.06232, \"Real (CI excludes no gap)\": true}, {\"Comparison\": \"Female vs Male\", \"Metric\": \"Approval rate of repayers\", \"Gap\": 0.04155, \"95% CI low\": 0.03633, \"95% CI high\": 0.04698, \"Real (CI excludes no gap)\": true}, {\"Comparison\": \"Female vs Male\", \"Metric\": \"Default rate of approved\", \"Gap\": -0.01486, \"95% CI low\": -0.01919, \"95% CI high\": -0.01056, \"Real (CI excludes no gap)\": true}, {\"Comparison\": \"Female vs Male\", \"Metric\": \"Four-fifths ratio\", \"Gap\": 0.93698, \"95% CI low\": 0.93094, \"95% CI high\": 0.94322, \"Real (CI excludes no gap)\": true}], \"retrain_without_sensitive_features\": {\"dropped\": [\"AGE_YEARS\", \"EMPLOYED_TO_AGE\", \"NAME_FAMILY_STATUS\", \"CNT_CHILDREN\", \"CNT_FAM_MEMBERS\"], \"note\": \"Gender was already excluded from both models.\", \"models\": {\"Shipped, cutoff 0.17\": {\"ROC AUC\": 0.78642, \"Cutoff\": 0.17, \"Approval rate\": 0.88191, \"Profit (billions)\": 3.67897, \"Gender: Approval rate of repayers gap\": 0.04155, \"Gender: Approval rate of repayers CI\": [0.03633, 0.04698], \"Gender: Four-fifths ratio\": 0.93698, \"Gender: Four-fifths ratio CI\": [0.93094, 0.94322]}, \"Without sensitive, cutoff 0.17\": {\"ROC AUC\": 0.78494, \"Cutoff\": 0.17, \"Approval rate\": 0.88116, \"Profit (billions)\": 3.67347, \"Gender: Approval rate of repayers gap\": 0.0424, \"Gender: Approval rate of repayers CI\": [0.03717, 0.04797], \"Gender: Four-fifths ratio\": 0.93643, \"Gender: Four-fifths ratio CI\": [0.93029, 0.94278]}, \"Without sensitive, cutoff 0.2 (its best)\": {\"ROC AUC\": 0.78494, \"Cutoff\": 0.2, \"Approval rate\": 0.90961, \"Profit (billions)\": 3.68575, \"Gender: Approval rate of repayers gap\": 0.03375, \"Gender: Approval rate of repayers CI\": [0.02915, 0.03884], \"Gender: Four-fifths ratio\": 0.9488, \"Gender: Four-fifths ratio CI\": [0.94319, 0.95406]}, \"Shipped, cutoff 0.2 (reference)\": {\"ROC AUC\": 0.78642, \"Cutoff\": 0.2, \"Approval rate\": 0.91026, \"Profit (billions)\": 3.67287, \"Gender: Approval rate of repayers gap\": 0.03109, \"Gender: Approval rate of repayers CI\": [0.02676, 0.03581], \"Gender: Four-fifths ratio\": 0.95112, \"Gender: Four-fifths ratio CI\": [0.94583, 0.95618]}}}, \"decision\": \"Ship the model with all features: removing the sensitive features cost accuracy and widened the age gap (ages 20-29 fell below the four-fifths line) because the model overstated young applicants' risk.\"}",
+     "is_error": false
+    }
+   ],
+   "cost_usd": 0.000971
+  },
+  "10": {
+   "answer": "**The smallest change is to spread the repayments over a longer term.** Keeping the loan at 490,496 and increasing the number of regular payments by 10%, from about 16.3 to 18.0, would bring this applicant's predicted default probability from 17.2% to 15.5%, under the 17.0% approval cutoff. Each regular payment would fall from 30,006 to 27,278.\n\nBorrowing less is the other option. Cutting the loan by 15%, to 416,921 with the same number of payments, would bring the predicted probability to 16.3%, also under the cutoff. That option needs a bigger change to the loan amount, so the longer-term option is the smaller change.",
+   "steps": [
+    {
+     "tool": "path_to_approval",
+     "input": {
+      "applicant_id": 209138
+     },
+     "result": "{\"applicant_id\": 209138, \"status\": \"path\", \"current\": {\"loan_amount\": 490496, \"regular_payment\": 30006, \"n_payments\": 16.3, \"pd\": 0.1716}, \"recommended\": {\"loan_amount_cut\": \"0%\", \"payments_multiplier\": 1.1, \"new_loan_amount\": 490496, \"new_regular_payment\": 27278, \"n_payments\": 18.0, \"new_pd\": 0.1554}, \"borrow_less_only\": {\"loan_amount_cut\": \"15%\", \"payments_multiplier\": 1.0, \"new_loan_amount\": 416921, \"new_regular_payment\": 25505, \"n_payments\": 16.3, \"new_pd\": 0.1634}, \"longer_term_only\": {\"loan_amount_cut\": \"0%\", \"payments_multiplier\": 1.1, \"new_loan_amount\": 490496, \"new_regular_payment\": 27278, \"n_payments\": 18.0, \"new_pd\": 0.1554}, \"n_approved_options\": 50, \"cutoff\": 0.17}",
+     "is_error": false
+    }
+   ],
+   "cost_usd": 0.000824
+  }
+ }
+}

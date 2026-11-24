@@ -8,7 +8,7 @@ from streamlit.testing.v1 import AppTest
 APP = Path(__file__).resolve().parents[1] / "app"
 sys.path.insert(0, str(APP))          # pages import the shared `lib` module from app/
 
-PAGES = ["Home.py", "pages/1_Portfolio_Dashboard.py", "pages/2_Applicant_Review.py", "pages/3_Model_Card.py"]
+PAGES = ["Home.py", "pages/1_Portfolio_Dashboard.py", "pages/2_Applicant_Review.py", "pages/3_Model_Card.py", "pages/4_AI_Analyst.py"]
 
 
 @pytest.mark.parametrize("page", PAGES)
@@ -50,3 +50,20 @@ def test_dashboard_personas_tab():
     assert [t.label for t in at.tabs] == ["Overview", "Personas"]
     assert any(m.label == "Have a path to approval" for m in at.metric)
     assert any("**Thin file**" in m.value for m in at.markdown)
+
+
+def test_ai_analyst_page_without_questions():
+    at = AppTest.from_file(str(APP / "pages/4_AI_Analyst.py"), default_timeout=180).run()
+    assert not at.exception
+    assert any(m.label == "Questions left" and m.value == "10 of 10" for m in at.sidebar.metric)
+
+
+def test_ai_analyst_session_limit():
+    at = AppTest.from_file(str(APP / "pages/4_AI_Analyst.py"), default_timeout=180)
+    at.session_state["analyst_asked"] = 10
+    at.run()
+    assert not at.exception
+    assert len(at.chat_input) == 0, "chat box still open after 10 questions"
+    if at.info:                                   # no API key in this environment
+        return
+    assert any("used all 10 questions" in w.value for w in at.warning)

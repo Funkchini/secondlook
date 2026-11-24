@@ -26,6 +26,15 @@ FEATURE_LABELS = {
     "HAS_BUREAU_HISTORY": "Has a bureau record", "BUR_N_LOANS": "Loans at other lenders",
 }
 PATHS_PATH = PROCESSED_DIR / "paths_not_approved.parquet"
+# profile() columns -> SQL-friendly names for the AI Analyst's database
+PE_COLUMNS = {
+    "Applicants": "applicants", "Share": "share_of_not_approved", "EXT_SOURCE_MEAN": "median_ext_score",
+    "CREDIT_TO_INCOME": "median_loan_to_income", "ANNUITY_TO_INCOME": "median_payment_to_income",
+    "CREDIT_TERM": "median_n_payments", "YEARS_EMPLOYED": "median_years_employed",
+    "INST_LATE_SHARE": "median_late_payment_share", "HAS_BUREAU_HISTORY": "share_with_bureau_record",
+    "BUR_N_LOANS": "median_loans_elsewhere", "Repayment rate": "repayment_rate", "Mean PD": "mean_pd",
+    "Path to approval": "share_with_path",
+}
 
 
 def make_pipeline(k: int) -> Pipeline:

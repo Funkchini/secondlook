@@ -8,6 +8,8 @@ data/interim/*
 data/processed/*
 !data/**/.gitkeep
 *.db
+# the small read-only copy of the bundle for the AI Analyst ships with the app (the big DB stays ignored)
+!app/demo_data/analyst.db
 *.sqlite
 
 # --- Model artifacts (rebuild with the notebooks) ---

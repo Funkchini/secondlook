@@ -41,7 +41,7 @@ s4.markdown("**4. Offer and communicate**  \nA re-scored *path to approval* find
             "(claims vs the model's reasons, and tone) flag anything for the loan officer to review before sending.")
 
 st.subheader("Explore the app")
-p1, p2, p3 = st.columns(3)
+p1, p2, p3, p4 = st.columns(4)
 with p1:
     st.page_link("pages/1_Portfolio_Dashboard.py", label="📊 Portfolio Dashboard", help="Risk, approvals and profit across all test applicants; try other cutoffs.")
     st.caption("How the model performs across the whole portfolio, with a live cutoff and profit simulator.")
@@ -51,8 +51,11 @@ with p2:
 with p3:
     st.page_link("pages/3_Model_Card.py", label="📄 Model Card", help="How the model was built, its limits and fairness checks.")
     st.caption("How the model was trained and evaluated, its limitations, and fairness checks.")
+with p4:
+    st.page_link("pages/4_AI_Analyst.py", label="💬 AI Analyst", help="Ask portfolio questions in plain English.")
+    st.caption("Ask a question in plain English; Claude answers with SQL and SecondLook's own tools, and shows its work.")
 
-st.info("**Phase 2 in progress.** Live now: the re-scored *path to approval*, an independent faithfulness and tone audit "
-        "of every letter, a full fairness audit on the Model Card, and borrower personas on the dashboard. Coming next: an AI "
-        "analyst agent for portfolio questions.")
+st.info("**New in Phase 2:** the re-scored *path to approval*, an independent faithfulness and tone audit of every letter, "
+        "a full fairness audit on the Model Card, borrower personas on the dashboard, and an AI Analyst that answers "
+        "portfolio questions with SQL.")
 footer()
