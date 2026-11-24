@@ -1,7 +1,8 @@
 # SecondLook
 
 **An AI-assisted second review for borderline loan declines.**
-Group 3 capstone, Uplift Code Camp, Python for Data and AI (Batch 3).
+
+A Group 3 Capstone Project for Uplift Code Camp, Python for Data and AI (Batch 3).
 
 ## Problem
 
