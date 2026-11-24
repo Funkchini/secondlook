@@ -1,79 +1,79 @@
 {
- "agent_version": "v2",
+ "agent_version": "v3",
  "model": "claude-haiku-5-5",
  "runs": {
   "1": {
-   "answer": "The approval rate for thin-file applicants (no credit bureau record) is 82.7%, meaning 7,258 of 8,776 were approved. For comparison, applicants with a bureau record were approved at 89.1% (46,982 of 52,727), so thin-file applicants are approved at a lower rate, by about 6.4 percentage points.",
+   "answer": "The approval rate for thin-file applicants (no credit bureau record) is 82.7%: 7,258 of 8,776 were approved.\n\nFor comparison, applicants with a bureau record were approved at 89.1% (46,982 of 52,727), so thin-file applicants are approved at a lower rate by about 6.4 percentage points.",
    "steps": [
     {
      "tool": "run_sql",
      "input": {
-      "query": "SELECT has_bureau_record, COUNT(*) AS applicants, SUM(CASE WHEN decision='approve' THEN 1 ELSE 0 END) AS approved, ROUND(1.0*SUM(CASE WHEN decision='approve' THEN 1 ELSE 0 END)/COUNT(*),4) AS approval_rate FROM portfolio GROUP BY has_bureau_record"
+      "query": "SELECT has_bureau_record, COUNT(*) AS applicants, SUM(CASE WHEN decision='approve' THEN 1 ELSE 0 END) AS approved, ROUND(100.0*SUM(CASE WHEN decision='approve' THEN 1 ELSE 0 END)/COUNT(*),1) AS approval_rate_pct FROM portfolio GROUP BY has_bureau_record"
      },
-     "result": "has_bureau_record,applicants,approved,approval_rate\r\n0,8776,7258,0.827\r\n1,52727,46982,0.891\r\n",
+     "result": "has_bureau_record,applicants,approved,approval_rate_pct\r\n0,8776,7258,82.7\r\n1,52727,46982,89.1\r\n",
      "is_error": false
     }
    ],
-   "cost_usd": 0.000671
+   "cost_usd": 0.000684
   },
   "2": {
-   "answer": "There are 2,611 applicants under review, and 2,082 of them repaid, a repayment share of 79.7%.\n\nThis is the share of all applicants under review who had no payment difficulties. The data does not show what happened to the other 529, beyond the fact that they had payment difficulties.",
+   "answer": "There are 2,611 applicants under review, and 2,082 of them repaid, a repayment share of 79.7%.",
    "steps": [
     {
      "tool": "run_sql",
      "input": {
-      "query": "SELECT COUNT(*) AS under_review_count, SUM(CASE WHEN defaulted = 0 THEN 1 ELSE 0 END) AS repaid_count, ROUND(1.0 * SUM(CASE WHEN defaulted = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS repaid_share FROM portfolio WHERE decision = 'under_review'"
+      "query": "SELECT COUNT(*) AS under_review, SUM(CASE WHEN defaulted = 0 THEN 1 ELSE 0 END) AS repaid, ROUND(1.0 * SUM(CASE WHEN defaulted = 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS repaid_share FROM portfolio WHERE decision = 'under_review'"
      },
-     "result": "under_review_count,repaid_count,repaid_share\r\n2611,2082,0.7974\r\n",
+     "result": "under_review,repaid,repaid_share\r\n2611,2082,0.7974\r\n",
      "is_error": false
     }
    ],
-   "cost_usd": 0.000659
+   "cost_usd": 0.000643
   },
   "3": {
-   "answer": "The \"Newer job, clean record\" persona has the most repayers among applicants we don't approve: 2,127 of its 2,983 not-approved applicants repaid (about 71.3%).\n\nFor comparison, the other personas' repayer counts are:\n- Thin file: 965\n- Big loan for the income: 770\n- Missed payments before: 746\n- Long job, many past loans: 573\n\nThese counts cover applicants with a decision of under review or decline.",
+   "answer": "The persona with the most repayers among the not-approved applicants (under review or declined) is **\"Newer job, clean record\"**, with **2,127 repayers**.\n\nFor comparison, the next largest is \"Thin file\" with 965. The full ranking is:\n\n| Persona | Repayers who were not approved |\n|---|---|\n| Newer job, clean record | 2,127 |\n| Thin file | 965 |\n| Big loan for the income | 770 |\n| Missed payments before | 746 |\n| Long job, many past loans | 573 |",
    "steps": [
     {
      "tool": "run_sql",
      "input": {
-      "query": "SELECT persona, COUNT(*) AS not_approved, SUM(CASE WHEN defaulted = 0 THEN 1 ELSE 0 END) AS repayers FROM portfolio WHERE decision IN ('under_review','decline') AND persona IS NOT NULL GROUP BY persona ORDER BY repayers DESC"
+      "query": "SELECT persona, COUNT(*) AS repayers FROM portfolio WHERE defaulted = 0 AND decision IN ('under_review', 'decline') AND persona IS NOT NULL GROUP BY persona ORDER BY repayers DESC;"
      },
-     "result": "persona,not_approved,repayers\r\n\"Newer job, clean record\",2983,2127\r\nThin file,1347,965\r\nBig loan for the income,1057,770\r\nMissed payments before,1066,746\r\n\"Long job, many past loans\",810,573\r\n",
+     "result": "persona,repayers\r\n\"Newer job, clean record\",2127\r\nThin file,965\r\nBig loan for the income,770\r\nMissed payments before,746\r\n\"Long job, many past loans\",573\r\n",
      "is_error": false
     }
    ],
-   "cost_usd": 0.000739
+   "cost_usd": 0.000749
   },
   "4": {
-   "answer": "About 5.3% of the loans we approve end in payment difficulties. Of the 54,240 approved applicants in the test portfolio, 2,883 defaulted, and the remaining 94.7% repaid.",
+   "answer": "The default rate on approved loans is 5.3%: 2,883 of the 54,240 approved applicants in the test portfolio had payment difficulties.",
    "steps": [
     {
      "tool": "run_sql",
      "input": {
-      "query": "SELECT COUNT(*) AS approved_applicants, SUM(defaulted) AS defaulted_approved, ROUND(100.0 * SUM(defaulted) / COUNT(*), 1) AS default_rate_pct FROM portfolio WHERE decision = 'approve'"
+      "query": "SELECT COUNT(*) AS approved_applicants, SUM(defaulted) AS defaulted_approved, ROUND(1.0*SUM(defaulted)/COUNT(*),4) AS default_rate FROM portfolio WHERE decision='approve'"
      },
-     "result": "approved_applicants,defaulted_approved,default_rate_pct\r\n54240,2883,5.3\r\n",
+     "result": "approved_applicants,defaulted_approved,default_rate\r\n54240,2883,0.0532\r\n",
      "is_error": false
     }
    ],
-   "cost_usd": 0.000641
+   "cost_usd": 0.000618
   },
   "5": {
-   "answer": "About 9.2% of applicants who actually repaid were not approved: 5,181 of the 56,538 repayers. Those are the people the model placed in \"under review\" or \"decline\", so the model turned away a small share of borrowers who would have paid back.",
+   "answer": "Of the 56,538 applicants who went on to repay, 5,181 were not approved. That is 9.2% of repayers.",
    "steps": [
     {
      "tool": "run_sql",
      "input": {
-      "query": "SELECT COUNT(*) AS repayers, SUM(CASE WHEN decision IN ('under_review','decline') THEN 1 ELSE 0 END) AS repayers_not_approved, ROUND(100.0 * SUM(CASE WHEN decision IN ('under_review','decline') THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_not_approved FROM portfolio WHERE defaulted = 0"
+      "query": "SELECT COUNT(*) AS repayers, SUM(CASE WHEN decision IN ('under_review','decline') THEN 1 ELSE 0 END) AS repayers_not_approved, ROUND(100.0*SUM(CASE WHEN decision IN ('under_review','decline') THEN 1 ELSE 0 END)/COUNT(*),1) AS pct_not_approved FROM portfolio WHERE defaulted = 0;"
      },
      "result": "repayers,repayers_not_approved,pct_not_approved\r\n56538,5181,9.2\r\n",
      "is_error": false
     }
    ],
-   "cost_usd": 0.000688
+   "cost_usd": 0.000698
   },
   "6": {
-   "answer": "The 20-29 age band has the lowest approval rate: **79.2%** of its 8,905 applicants are approved at the 0.17 cutoff.\n\n| Age band | Applicants | Approval rate | Four-fifths ratio |\n|---|---|---|---|\n| 20-29 | 8,905 | 79.2% | 0.82 |\n| 30-39 | 16,487 | 84.2% | 0.87 |\n| 40-49 | 15,303 | 89.3% | 0.93 |\n| 50-59 | 13,617 | 93.3% | 0.97 |\n| 60-69 | 7,191 | 96.4% | 1.00 |\n\nThe 20-29 ratio of 0.82 is above the 0.8 four-fifths line, though only just. The gap between 20-29 and the highest-approving band (60-69) is 17.3 percentage points, and the bootstrap interval shows this gap is real.",
+   "answer": "The lowest approval rate is for the **20-29** age band, at **79.2%** of applicants (about 8,905 applicants in that band).\n\nFor comparison, the approval rates rise with age:\n\n| Age band | Approval rate |\n|---|---|\n| 20-29 | 79.2% |\n| 30-39 | 84.2% |\n| 40-49 | 89.3% |\n| 50-59 | 93.3% |\n| 60-69 | 96.4% |\n\nThe gap between the 60-69 and 20-29 bands is 17.3 percentage points, and the bootstrap interval confirms this gap is real. The 20-29 band's ratio to the best group is 0.82, which is above the 0.8 four-fifths line.",
    "steps": [
     {
      "tool": "fairness_summary",
@@ -84,10 +84,10 @@
      "is_error": false
     }
    ],
-   "cost_usd": 0.000945
+   "cost_usd": 0.000903
   },
   "7": {
-   "answer": "About 31.3% of declined applicants have a path to approval: 1,456 of the 4,652 applicants with a decline decision. The remaining declined applicants have no path, meaning no smaller loan or longer repayment schedule within the tested range would get them approved.\n\nThis excludes the 2,611 applicants in the under-review band.",
+   "answer": "About 31.3% of declined applicants have a path to approval: 1,456 of the 4,652 applicants with a decline decision. The other 68.7% have no path, meaning no smaller loan or extra regular payments within the tested range would get them approved. This figure excludes the under-review band.",
    "steps": [
     {
      "tool": "run_sql",
@@ -98,24 +98,24 @@
      "is_error": false
     }
    ],
-   "cost_usd": 0.000708
+   "cost_usd": 0.000724
   },
   "8": {
-   "answer": "On average, approved applicants asked for a larger loan than applicants we don't approve: about 608,201 versus about 519,934, a difference of roughly 88,267 (amounts have no stated currency).\n\nSupporting counts:\n\n| Group | Applicants | Average loan amount |\n|---|---|---|\n| Approved | 54,240 | 608,201 |\n| Not approved (under review or declined) | 7,263 | 519,934 |",
+   "answer": "On average, approved applicants asked for a larger loan than applicants we don't approve: about 608,201 versus about 519,934, a difference of roughly 88,267 (about 17% more).\n\nCounts: 54,240 approved and 7,263 not approved. Amounts have no stated currency.",
    "steps": [
     {
      "tool": "run_sql",
      "input": {
-      "query": "SELECT CASE WHEN decision = 'approve' THEN 'Approved' ELSE 'Not approved' END AS grp, COUNT(*) AS applicants, ROUND(AVG(loan_amount),2) AS avg_loan_amount FROM portfolio GROUP BY grp"
+      "query": "SELECT CASE WHEN decision = 'approve' THEN 'approved' ELSE 'not approved' END AS grp, COUNT(*) AS applicants, ROUND(AVG(loan_amount), 2) AS avg_loan_amount FROM portfolio GROUP BY grp"
      },
-     "result": "grp,applicants,avg_loan_amount\r\nApproved,54240,608201\r\nNot approved,7263,519934\r\n",
+     "result": "grp,applicants,avg_loan_amount\r\napproved,54240,608201\r\nnot approved,7263,519934\r\n",
      "is_error": false
     }
    ],
-   "cost_usd": 0.000661
+   "cost_usd": 0.000648
   },
   "9": {
-   "answer": "Women who repaid were approved **4.2 percentage points more often** than men who repaid (92.2% vs 88.1%). In relative terms, that is about 4.7% more. The gap is statistically real: the 95% bootstrap interval runs from 3.6 to 4.7 points and does not include zero.\n\n| Group (repayers only) | Approval rate |\n|---|---|\n| Female | 92.2% |\n| Male | 88.1% |\n\nGender was not a model input. The audit also tested a model retrained without the sensitive features (age, family status, number of children). The gap barely moved, from 4.2 to 4.2 points at the 0.17 cutoff, so removing those features did not close it. The team chose to ship the model with all features.",
+   "answer": "Women who repaid were approved **4.2 percentage points more often** than men who repaid: 92.2% against 88.1%. That is about 4.7% more in relative terms. The gap is statistically real: the 95% bootstrap interval runs from 3.6 to 4.7 points and does not include zero.\n\nGender is not a model input, so the gap comes from other factors that differ between the two groups.",
    "steps": [
     {
      "tool": "fairness_summary",
@@ -126,10 +126,10 @@
      "is_error": false
     }
    ],
-   "cost_usd": 0.000971
+   "cost_usd": 0.000897
   },
   "10": {
-   "answer": "**The smallest change is to spread the repayments over a longer term.** Keeping the loan at 490,496 and increasing the number of regular payments by 10%, from about 16.3 to 18.0, would bring this applicant's predicted default probability from 17.2% to 15.5%, under the 17.0% approval cutoff. Each regular payment would fall from 30,006 to 27,278.\n\nBorrowing less is the other option. Cutting the loan by 15%, to 416,921 with the same number of payments, would bring the predicted probability to 16.3%, also under the cutoff. That option needs a bigger change to the loan amount, so the longer-term option is the smaller change.",
+   "answer": "The smallest change the model would approve is to **keep the loan at 490,496 and allow 10% more regular payments**. The number of payments rises from 16.3 to 18.0, which lowers each regular payment from 30,006 to 27,278. The predicted default risk falls from 17.2% to 15.5%, just under the 17.0% approval cutoff.\n\nThe only other option the model returned is to **borrow 15% less** (416,921) on the same schedule. That brings the predicted risk to 16.3%, which is also approved, but it requires a smaller loan rather than a longer repayment period.",
    "steps": [
     {
      "tool": "path_to_approval",
@@ -140,7 +140,7 @@
      "is_error": false
     }
    ],
-   "cost_usd": 0.000824
+   "cost_usd": 0.000822
   }
  }
 }

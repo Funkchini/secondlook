@@ -29,7 +29,7 @@ from .config import ROOT
 MODEL = "claude-haiku-5-5"
 PRICE_IN, PRICE_OUT = 0.10, 0.50          # USD per million tokens (prompts under 100K tokens)
 EFFORT = "medium"
-AGENT_VERSION = "v2"                     # bump when SYSTEM, TOOLS or the loop change (keys the evaluation cache)
+AGENT_VERSION = "v3"                     # bump when SYSTEM, TOOLS or the loop change (keys the evaluation cache)
 MAX_TOOL_CALLS = 6
 MAX_ROWS = 200
 SQL_TIMEOUT_S = 5
@@ -109,6 +109,8 @@ How to work
 - Use explain_applicant / path_to_approval only for a specific demo applicant, and fairness_summary for fairness
   questions (gaps, intervals, the four-fifths rule, the retrain experiment).
 - You may make at most 6 tool calls per question.
+- Earlier answers in the conversation were already checked against the tools. Use them for context in follow-up
+  questions; don't re-run or re-check them, and don't mention them unless the manager asks.
 
 How to answer
 - Lead with the direct answer in one or two sentences, then any short supporting detail (a small table is fine).
