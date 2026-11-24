@@ -26,14 +26,14 @@ LABELS = {
     "CREDIT_TO_INCOME": "Loan amount vs income", "ANNUITY_TO_INCOME": "Repayment vs income",
     "AMT_CREDIT": "Loan amount", "AMT_ANNUITY": "Regular repayment amount", "AMT_GOODS_PRICE": "Price of goods",
     "AMT_INCOME_TOTAL": "Income", "INCOME_PER_PERSON": "Income per family member",
-    "YEARS_EMPLOYED": "Years in current job", "EMPLOYED_TO_AGE": "Job tenure relative to age", "AGE_YEARS": "Age",
+    "YEARS_EMPLOYED": "Time in current job", "EMPLOYED_TO_AGE": "Job tenure relative to age", "AGE_YEARS": "Age",
     "NAME_EDUCATION_TYPE": "Education level", "NAME_INCOME_TYPE": "Income type", "NAME_FAMILY_STATUS": "Family status",
     "NAME_CONTRACT_TYPE": "Loan type", "FLAG_OWN_CAR": "Owns a car", "OWN_CAR_AGE": "Age of car",
     "REGION_RATING_CLIENT_W_CITY": "Region rating (with city)", "REGION_RATING_CLIENT": "Region rating",
-    "YEARS_SINCE_PHONE_CHANGE": "Years since phone number changed", "YEARS_SINCE_ID_PUBLISH": "Years since ID document changed",
-    "YEARS_SINCE_REGISTRATION": "Years since registration changed", "DAYS_EMPLOYED_ANOM": "Not currently employed (e.g. pensioner)",
+    "YEARS_SINCE_PHONE_CHANGE": "Time since phone number changed", "YEARS_SINCE_ID_PUBLISH": "Time since ID document changed",
+    "YEARS_SINCE_REGISTRATION": "Time since registration changed", "DAYS_EMPLOYED_ANOM": "Not currently employed (e.g. pensioner)",
     "BUR_DEBT_TO_CREDIT": "Debt vs credit limit at other lenders", "BUR_ACTIVE_SHARE": "Share of other loans still active",
-    "BUR_YEARS_SINCE_LAST_LOAN": "Years since last loan at another lender", "BUR_YEARS_SINCE_FIRST_LOAN": "Length of credit history",
+    "BUR_YEARS_SINCE_LAST_LOAN": "Time since last loan at another lender", "BUR_YEARS_SINCE_FIRST_LOAN": "Length of credit history",
     "BUR_TOTAL_CREDIT": "Total credit at other lenders", "BUR_TOTAL_DEBT": "Total debt at other lenders",
     "BUR_N_LOANS": "Number of loans at other lenders", "BUR_N_ACTIVE": "Active loans at other lenders",
     "BUR_MAX_DAYS_OVERDUE": "Days currently overdue at other lenders", "HAS_BUREAU_HISTORY": "Has a credit bureau record",
@@ -41,7 +41,7 @@ LABELS = {
     "PREV_AVG_GRANTED_TO_APPLIED": "Past loans granted vs amount requested", "PREV_REFUSED_SHARE": "Share of past applications refused",
     "PREV_N_REFUSED": "Past applications refused", "PREV_N_REFUSED_LAST_YEAR": "Refusals in the last year",
     "PREV_AVG_TERM": "Average term of past loans", "PREV_AVG_AMT_APPLIED": "Average amount requested before",
-    "PREV_YEARS_SINCE_LAST_DECISION": "Years since last application", "PREV_N_APPROVED": "Past applications approved",
+    "PREV_YEARS_SINCE_LAST_DECISION": "Time since last application", "PREV_N_APPROVED": "Past applications approved",
     "INST_LATE_SHARE": "Share of past payments late", "INST_LATE_SHARE_LAST_YEAR": "Share of payments late in the last year",
     "INST_AVG_DAYS_LATE": "Average days late on past payments", "INST_MAX_DAYS_LATE": "Most days late on one payment",
     "INST_UNDERPAID_SHARE": "Share of past payments underpaid", "INST_TOTAL_UNDERPAID": "Total amount underpaid",
@@ -119,12 +119,31 @@ def label_of(feature: str) -> str:
     return (d[:60] + "...") if isinstance(d, str) and len(d) > 60 else (d or feature)
 
 
+# Building features named YEARS_* are normalised scores, not lengths of time
+NORMALISED = {"YEARS_BEGINEXPLUATATION_AVG", "YEARS_BUILD_AVG"}
+
+
+def format_duration(years: float) -> str:
+    """A length of time in words: 'about 5 weeks', 'about 7 months', '3.2 years' (never '0.1 years')."""
+    years = abs(float(years))
+    days = round(years * 365.25)
+    if days < 7:
+        return "less than a week"
+    if days < 8 * 7:                      # up to 8 weeks: "about 5 weeks" reads better than "about 1 month"
+        weeks = round(days / 7)
+        return f"about {weeks} week{'s' if weeks != 1 else ''}"
+    months = round(years * 12)
+    if months < 12:
+        return f"about {months} month{'s' if months != 1 else ''}"
+    return f"{max(years, 1.0):.1f} years"
+
+
 def format_value(feature: str, value) -> str:
     """Show a raw feature value the way a person would read it."""
-    if value is None or (isinstance(value, float) and np.isnan(value)):
-        return "not available"
     if isinstance(value, str):
         return value
+    if value is None or pd.isna(value):       # catches None, float NaN and numpy NaN (e.g. float32)
+        return "not available"
     if feature.startswith("AMT_") or feature.startswith(("BUR_TOTAL", "INST_TOTAL", "CC_AVG_BALANCE", "CC_AVG_DRAWINGS",
                                                          "PREV_AVG_AMT", "INCOME_PER_PERSON")):
         return f"{value:,.0f}"
@@ -136,8 +155,8 @@ def format_value(feature: str, value) -> str:
         return f"{value:.2f}x"
     if feature in ("CREDIT_TERM", "PREV_AVG_TERM"):
         return f"about {value:.0f} payments"
-    if "YEARS" in feature:
-        return f"{value:.1f}"
+    if "YEARS" in feature and feature not in NORMALISED:
+        return format_duration(value)
     return f"{value:,.0f}" if float(value).is_integer() else f"{value:,.2f}"
 
 
