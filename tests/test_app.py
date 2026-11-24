@@ -67,3 +67,18 @@ def test_ai_analyst_session_limit():
     if at.info:                                   # no API key in this environment
         return
     assert any("used all 10 questions" in w.value for w in at.warning)
+
+
+@pytest.mark.parametrize("off_topic,locked", [(1, False), (2, False), (3, True)])
+def test_ai_analyst_off_topic_limit(off_topic, locked):
+    at = AppTest.from_file(str(APP / "pages/4_AI_Analyst.py"), default_timeout=180)
+    at.session_state["analyst_off_topic"] = off_topic
+    at.run()
+    assert not at.exception
+    if at.info:                                   # no API key in this environment
+        return
+    assert (len(at.chat_input) == 0) == locked
+    if locked:
+        assert any("chat is closed" in e.value for e in at.error)
+    else:
+        assert any(f"Off-topic message {off_topic} of 2" in w.value for w in at.warning)

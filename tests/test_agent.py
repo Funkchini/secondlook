@@ -125,3 +125,44 @@ def test_every_recorded_answer_shows_its_work():
     for qid, r in RUNS["runs"].items():
         assert r["steps"], f"Q{qid} has no tool calls"
         assert r["cost_usd"] > 0
+
+
+# ---------------------------------------------------------------- staying on topic, follow-ups
+def test_off_topic_stops_with_the_fixed_reply_and_no_second_call():
+    client = FakeClient([([tool_use(1, "off_topic", {"kind": "small_talk"})], "tool_use")])
+    r = A.run_agent("How's your day?", client)
+    assert r.off_topic == "small_talk" and r.answer == A.OFF_TOPIC_REPLY and r.stop == "off_topic"
+    assert len(client.requests) == 1 and r.steps == []
+
+
+def test_over_long_or_empty_questions_are_refused_before_any_call():
+    assert A.check_question("x" * (A.MAX_QUESTION_CHARS + 1)).startswith("Please keep questions under")
+    assert A.check_question("   ") == "Please type a question."
+    assert A.check_question("What is the approval rate?") is None
+
+
+def test_earlier_answers_carry_their_sources():
+    steps = [{"tool": "run_sql", "input": {"query": "SELECT  COUNT(*)\n FROM portfolio"}},
+             {"tool": "fairness_summary", "input": {"group": "gender"}}]
+    msg = A.history_message("There are 61,503 applicants.", steps)
+    assert msg.startswith("There are 61,503 applicants.")
+    assert "[Source: computed from 2 tool calls" in msg and "run_sql: SELECT COUNT(*) FROM portfolio" in msg
+    assert A.history_message("Hello", []) == "Hello"
+
+
+def test_copied_source_notes_never_reach_the_page():
+    content = [NS(type="text", text="The rate is 5.3%.\n\n[Source: run_sql: SELECT 1]")]
+    assert A._text(content) == "The rate is 5.3%."
+
+
+def test_recorded_scope_probes_are_all_classified_correctly():
+    wrong = [p for p in RUNS["scope"] if bool(p["off_topic"]) != p["should_be_off_topic"]]
+    assert len(RUNS["scope"]) == 9 and not wrong, wrong
+
+
+def test_recorded_followups_do_not_correct_earlier_answers():
+    from secondlook.analyst_eval import SELF_CORRECTION, followup_expected
+    hits = [t["answer"] for t in RUNS["followup"] if SELF_CORRECTION.search(t["answer"])]
+    assert not hits, hits
+    exp, last = followup_expected(), RUNS["followup"][-1]["answer"]
+    assert exp["persona"].lower() in last.lower() and str(exp["rate"]) in last

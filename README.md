@@ -87,7 +87,7 @@ streamlit run app/Home.py
 | **Portfolio Dashboard** | Overview tab: risk distribution, live cutoff and profit simulator, calibration, approvals vs score-only, thin-file results. Personas tab: five K-Means borrower personas among the not-approved, with a PCA map, profiles and how each can be helped |
 | **Applicant Review** | One applicant: PD, decision, SHAP reasons, re-scored path to approval (borrow less or a longer term), Claude letter that offers those terms (pre-drafted, or drafted live with an API key), independent audit of the letter (claims vs the model's reasons, tone), officer decision |
 | **Model Card** | Model details, metrics, SHAP importance, fairness audit (gender, age, thin file, with bootstrap intervals, the retrain-without-sensitive-features experiment and the decision), intended use and limitations |
-| **AI Analyst** | Ask portfolio questions in plain English. Claude Haiku 5.5 writes SQL on a read-only database and calls SecondLook's own tools (SHAP reasons, path to approval, fairness audit); every answer shows its queries, tool calls and cost. 10 questions per session |
+| **AI Analyst** | Ask portfolio questions in plain English. Claude Haiku 5.5 writes SQL on a read-only database and calls SecondLook's own tools (SHAP reasons, path to approval, fairness audit); every answer shows its queries, tool calls and cost. Off-topic messages get a fixed reply (2 allowed with a warning, the third closes the chat); 10 questions per session |
 
 Live letter drafting and the AI Analyst need `ANTHROPIC_API_KEY` in `.env` (locally) or in the app's secrets (cloud). Without a key, everything else works and pre-drafted letters are shown.
 
@@ -108,7 +108,7 @@ To rebuild the bundle after retraining (needs the full pipeline): `cd src && pyt
 pytest tests/
 ```
 
-93 tests: letter guardrail rules (19), letter audit (10, replaying saved Claude answers for one real and four deliberately broken letters), AI Analyst (18: SQL safety, the agent loop with a scripted client, and the ten test questions graded against pandas answers from recorded runs), value formatting (17), path to approval (6), fairness metrics (5), personas (5) and app smoke tests that run every page, the cutoff slider, the cached letters and their audits, the fairness audit, the Personas tab and the AI Analyst's session limit (13). No API calls.
+102 tests: letter guardrail rules (19), letter audit (10, replaying saved Claude answers for one real and four deliberately broken letters), AI Analyst (24: SQL safety, the agent loop with a scripted client, off-topic handling, follow-up sources, and the ten test questions, scope probes and a follow-up conversation graded from recorded runs), value formatting (17), path to approval (6), fairness metrics (5), personas (5) and app smoke tests that run every page, the cutoff slider, the cached letters and their audits, the fairness audit, the Personas tab and the AI Analyst's question and off-topic limits (16). No API calls.
 
 ## Roadmap
 
