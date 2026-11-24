@@ -17,6 +17,7 @@ from secondlook import modeling as M                      # noqa: E402
 from secondlook.explain import Explainer, label_of        # noqa: E402
 from secondlook import letters as L                       # noqa: E402
 from secondlook import path as P                          # noqa: E402
+from secondlook import personas as PE                     # noqa: E402
 
 BUNDLE = ROOT / "app" / "demo_data"
 DECISION_STYLE = {
@@ -57,6 +58,12 @@ def load_audits() -> dict:
     """Independent faithfulness and tone audits of the pre-drafted letters (src/secondlook/letter_audit.py)."""
     path = BUNDLE / "audits.json"
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+
+@st.cache_data(show_spinner=False)
+def load_personas() -> pd.DataFrame:
+    """Not-approved test applicants with their persona and PCA map position (notebooks/09_personas.ipynb)."""
+    return pd.read_parquet(BUNDLE / "personas.parquet")
 
 
 @st.cache_data(show_spinner=False)

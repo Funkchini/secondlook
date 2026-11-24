@@ -42,3 +42,11 @@ def test_model_card_shows_fairness_audit_and_decision():
     assert len(at.tabs) == 3                                         # gender, age band, credit file
     assert any("Decision: we ship the model with all features" in s.value for s in at.success)
     assert any("bootstrap resamples" in c.value for c in at.caption)
+
+
+def test_dashboard_personas_tab():
+    at = AppTest.from_file(str(APP / "pages/1_Portfolio_Dashboard.py"), default_timeout=180).run()
+    assert not at.exception
+    assert [t.label for t in at.tabs] == ["Overview", "Personas"]
+    assert any(m.label == "Have a path to approval" for m in at.metric)
+    assert any("**Thin file**" in m.value for m in at.markdown)

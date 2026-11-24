@@ -53,6 +53,6 @@ with p3:
     st.caption("How the model was trained and evaluated, its limitations, and fairness checks.")
 
 st.info("**Phase 2 in progress.** Live now: the re-scored *path to approval*, an independent faithfulness and tone audit "
-        "of every letter, and a full fairness audit on the Model Card. Coming next: borrower personas and an AI analyst agent "
-        "for portfolio questions.")
+        "of every letter, a full fairness audit on the Model Card, and borrower personas on the dashboard. Coming next: an AI "
+        "analyst agent for portfolio questions.")
 footer()
