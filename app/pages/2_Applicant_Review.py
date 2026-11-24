@@ -5,8 +5,8 @@ import streamlit as st
 
 st.set_page_config(page_title="Applicant Review · SecondLook", page_icon="🧑", layout="wide")
 
-from lib import (DECISION_STYLE, L, api_key_available, decision_badge, explain_applicant, footer,  # noqa: E402
-                 load_applicants, load_letters, load_model, money, score_applicants)
+from lib import (DECISION_STYLE, L, P, api_key_available, decision_badge, explain_applicant, footer,  # noqa: E402
+                 load_applicants, load_letters, load_model, money, path_for, score_applicants)
 
 _, meta, _ = load_model()
 scored = score_applicants()
@@ -83,15 +83,47 @@ with right:
     st.dataframe(table(exp["raises"]), hide_index=True, use_container_width=True, column_config=cfg)
     st.markdown("**Lowered risk most (strengths)**")
     st.dataframe(table(exp["lowers"]), hide_index=True, use_container_width=True, column_config=cfg)
-    actionable = exp["raises"][exp["raises"]["category"] == "actionable"]
-    if decision != "approve" and not actionable.empty:
-        st.info("🔧 **Changeable loan terms among the top risk factors:** " + ", ".join(actionable["label"]) +
-                ". Restructuring the loan could lower the risk (re-scored path to approval coming in Phase 2).")
+
+# ---------------------------------------------------------------- path to approval
+path = path_for(sid) if decision != "approve" else None
+
+
+def describe(o) -> str:
+    parts = ([f"{o['cut']:.0%} less"] if o["cut"] > 0 else []) + \
+            ([f"{o['term_mult'] - 1:.0%} more payments"] if o["term_mult"] > 1 else [])
+    return " + ".join(parts)
+
+
+if path is not None:
+    st.subheader("🛣️ Path to approval")
+    if path["status"] == "path":
+        opts = [("Current loan", path["current"])]
+        for label, kind in [("⭐ Recommended", "recommended"), ("Borrow less only", "borrow_less"),
+                            ("Longer term only", "longer_term")]:
+            o = path[kind]
+            if o and not any(o["cut"] == x["cut"] and o["term_mult"] == x["term_mult"] for _, x in opts):
+                opts.append((label, o))
+        st.dataframe(pd.DataFrame({
+            "Option": [lab for lab, _ in opts],
+            "Change": ["none"] + [describe(o) for _, o in opts[1:]],
+            "Loan amount": [money(o["loan_amount"]) for _, o in opts],
+            "Regular payment": [money(o["regular_payment"]) for _, o in opts],
+            "Payments": [f"{o['n_payments']:.0f}" for _, o in opts],
+            "Predicted risk": [f"{o['pd']:.1%}" for _, o in opts],
+            "Decision": [DECISION_STYLE[L.decision_for(o["pd"], cutoff)][0] for _, o in opts],
+        }), hide_index=True, use_container_width=True)
+        st.caption(f"Each option is re-scored by the same model and must be at least {P.MARGIN * 100:.1f} points under the "
+                   f"{cutoff:.0%} cutoff. Only the loan changes: up to 40% less, or up to 50% more payments (at most "
+                   f"{P.TERM_CAP:.0f}). Recommended = the smallest change. Payment = amount ÷ payments, before interest. "
+                   "The model reflects past patterns, not a guarantee: the officer decides.")
+    else:
+        st.info("No realistic change to the loan (up to 40% less, or up to 50% more payments) brings the risk under "
+                "the cutoff. The risk comes mainly from the applicant's history, not the loan.")
 
 # ---------------------------------------------------------------- letter
 st.subheader("📝 Draft letter to the applicant")
 apps = load_applicants().set_index("SK_ID_CURR")
-li = L.build_letter_input(sid, exp, apps.loc[sid], cutoff)
+li = L.build_letter_input(sid, exp, apps.loc[sid], cutoff, path=path)
 key = letter_key(sid, decision)
 letter = letters.get(key) or st.session_state.get(f"letter_{key}")
 

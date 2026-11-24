@@ -66,3 +66,20 @@ def test_decision_bands():
     assert decision_for(0.10, 0.17) == "approve"
     assert decision_for(0.19, 0.17) == "under_review"
     assert decision_for(0.30, 0.17) == "decline"
+
+
+def test_amounts_must_come_from_the_fact_sheet():
+    assert check_letter(make_letter("You asked for a loan of 500,000 with payments of 25,000."), make_input()) == []
+    issues = check_letter(make_letter("You asked for a loan of 550,000."), make_input())
+    assert any("amounts that are not in the fact sheet" in i for i in issues)
+
+
+def test_adjusted_terms_must_be_offered_exactly():
+    li = make_input("under_review")
+    li.adjusted_terms = {"loan_amount": "450,000", "regular_payment": "18,000", "number_of_payments": "about 25 payments"}
+    ok = "A loan officer may be able to offer a loan of 450,000 with payments of about 18,000 over about 25 payments."
+    assert check_letter(make_letter(ok), li) == []
+    issues = check_letter(make_letter("A loan officer may be able to offer a smaller loan."), li)
+    assert any("does not offer the adjusted terms" in i for i in issues)
+    issues = check_letter(make_letter("We may offer a loan of 440,000 with payments of about 18,000."), li)
+    assert any("amounts that are not in the fact sheet" in i for i in issues)

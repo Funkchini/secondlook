@@ -53,10 +53,7 @@ def build(verbose: bool = True) -> dict:
     applicants.to_parquet(BUNDLE_DIR / "applicants.parquet", index=False)
 
     # 4. Letters already drafted for these applicants (current prompt version only)
-    cache = json.loads(CACHE_PATH.read_text(encoding="utf-8")) if CACHE_PATH.exists() else {}
-    letters = {k: v for k, v in cache.items()
-               if v["applicant_id"] in set(keep_ids) and v.get("prompt_version") == PROMPT_VERSION and v.get("model") == LETTER_MODEL}
-    (BUNDLE_DIR / "letters.json").write_text(json.dumps(letters, indent=2, ensure_ascii=False), encoding="utf-8")
+    letters = write_letters(keep_ids)
 
     # 5. Check: the text-format model gives the same predictions as the trained model
     import lightgbm as lgb
@@ -69,6 +66,47 @@ def build(verbose: bool = True) -> dict:
         "portfolio_rows": len(preds), "applicants": len(applicants), "demo_with_letters": len(demo_ids),
         "letters": len(letters), "max_prediction_difference": max_diff,
     }
+    if verbose:
+        print(json.dumps(report, indent=2))
+    return report
+
+
+def write_letters(keep_ids=None) -> dict:
+    """Copy the cached letters for the bundle's applicants (current prompt version and model) into letters.json."""
+    if keep_ids is None:
+        keep_ids = pd.read_parquet(BUNDLE_DIR / "applicants.parquet", columns=[ID_COL])[ID_COL].tolist()
+    cache = json.loads(CACHE_PATH.read_text(encoding="utf-8")) if CACHE_PATH.exists() else {}
+    letters = {k: v for k, v in cache.items()
+               if v["applicant_id"] in set(keep_ids) and v.get("prompt_version") == PROMPT_VERSION and v.get("model") == LETTER_MODEL}
+    (BUNDLE_DIR / "letters.json").write_text(json.dumps(letters, indent=2, ensure_ascii=False), encoding="utf-8")
+    return letters
+
+
+def draft_demo_letters(verbose: bool = True) -> dict:
+    """Draft (or reuse from cache) the demo applicants' letters with the current prompt, exactly as the app would:
+    bundle model, SHAP reasons and path to approval. Then refresh letters.json. Calls the Claude API for new ones."""
+    import lightgbm as lgb
+    from .explain import Explainer
+    from .letters import build_letter_input, generate_letter
+    from .path import path_to_approval
+
+    booster = lgb.Booster(model_str=(BUNDLE_DIR / "model.txt").read_bytes().decode("utf-8").replace("\r\n", "\n"))
+    meta = json.loads((BUNDLE_DIR / "model_meta.json").read_text())
+    apps = pd.read_parquet(BUNDLE_DIR / "applicants.parquet")
+    explainer = Explainer(booster)
+    results = []
+    for sid in json.loads((PROCESSED_DIR / "demo_ids.json").read_text()):
+        row = apps[apps[ID_COL] == sid]
+        exp = explainer.explain(M.prepare_X(row, meta["features"], meta["categorical"], meta["categories"]))
+        path = path_to_approval(row, booster, meta, meta["cutoff"])
+        li = build_letter_input(sid, exp, row.iloc[0], meta["cutoff"], path=path)
+        results.append(generate_letter(li))
+    letters = write_letters()
+    report = {"letters": len(results), "passed": sum(r["checks_passed"] for r in results),
+              "new": sum(not r["from_cache"] for r in results),
+              "with_adjusted_terms": sum(bool(r["fact_sheet"].get("adjusted_terms")) for r in results),
+              "cost_usd_new": round(sum(r["cost_usd"] for r in results if not r["from_cache"]), 4),
+              "in_bundle": len(letters)}
     if verbose:
         print(json.dumps(report, indent=2))
     return report

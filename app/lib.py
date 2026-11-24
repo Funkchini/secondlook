@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from secondlook import modeling as M                      # noqa: E402
 from secondlook.explain import Explainer, label_of        # noqa: E402
 from secondlook import letters as L                       # noqa: E402
+from secondlook import path as P                          # noqa: E402
 
 BUNDLE = ROOT / "app" / "demo_data"
 DECISION_STYLE = {
@@ -74,6 +75,14 @@ def applicant_X(sid: int) -> pd.DataFrame:
 def explain_applicant(sid: int) -> dict:
     _, _, explainer = load_model()
     return explainer.explain(applicant_X(sid))
+
+
+@st.cache_data(show_spinner=False)
+def path_for(sid: int) -> dict:
+    """Re-scored path to approval for one applicant (see src/secondlook/path.py)."""
+    booster, meta, _ = load_model()
+    apps = load_applicants()
+    return P.path_to_approval(apps[apps["SK_ID_CURR"] == sid], booster, meta, meta["cutoff"])
 
 
 def api_key_available() -> bool:

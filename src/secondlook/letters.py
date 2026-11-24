@@ -27,8 +27,9 @@ from .explain import SENSITIVE, category_of, format_value
 
 MODEL = "claude-haiku-5-5"        # chosen in the proposal: fast and low-cost for short letters
 EFFORT = "low"
-PROMPT_VERSION = "v5"     # v2: no invented comparisons; v3: no internal tool name, letter-friendly factors;
-                          # v4: no job/employer; v5: refined guardrails (car age, comparisons)
+PROMPT_VERSION = "v6"     # v2: no invented comparisons; v3: no internal tool name, letter-friendly factors;
+                          # v4: no job/employer; v5: refined guardrails (car age, comparisons);
+                          # v6: offers the re-scored path to approval (adjusted_terms) and checks every amount
 CACHE_PATH = PROCESSED_DIR / "letter_cache.json"
 
 # Haiku 5.5 list prices, USD per million tokens (prompts under 100K tokens)
@@ -50,6 +51,7 @@ Write a short letter to the applicant (120-220 words):
 - Never mention or hint at age, gender, marital or family status, children, or any other personal characteristic.
 - No technical terms: never say SHAP, model, algorithm, log-odds, probability of default, PD, score cutoff or threshold value.
 - "SecondLook" is the lender's internal tool. Never mention it to the applicant.
+- If the fact sheet includes "adjusted_terms", the loan could be approved on those terms (a smaller amount and/or more payments). For "under_review", say a loan officer may be able to offer a loan of that amount with regular payments of about that payment over that number of payments. For "decline", say the application cannot be approved as requested, but a loan on those terms may be possible and they can contact us to discuss it. Present it as a possibility the loan officer will confirm, never a promise, and quote the amounts exactly as written. If there is no "adjusted_terms", do not suggest any specific amount or term.
 
 In reasons_cited, list the codes of the risk factors you mention. In strengths_cited, list the codes of the strengths you mention. Only use codes from the fact sheet."""
 
@@ -71,9 +73,13 @@ class LetterInput:
     number_of_payments: str
     risk_factors: list[dict] = field(default_factory=list)   # {code, label, value}
     strengths: list[dict] = field(default_factory=list)
+    adjusted_terms: dict | None = None  # {loan_amount, regular_payment, number_of_payments}: re-scored path to approval
 
     def fact_sheet(self) -> str:
-        return json.dumps(asdict(self), indent=2)
+        d = asdict(self)
+        if d["adjusted_terms"] is None:
+            d.pop("adjusted_terms")        # keep v5-style fact sheets unchanged when there is no path
+        return json.dumps(d, indent=2)
 
 
 def select_demo_applicants(pd_by_id, cutoff: float, n_each: int = 10, seed: int = 42) -> list[int]:
@@ -106,12 +112,27 @@ LETTER_SKIP = {"REGION_POPULATION_RELATIVE", "WEEKDAY_APPR_PROCESS_START", "HOUR
 
 def _letter_friendly(feature: str) -> bool:
     building = feature.endswith("_AVG") and not feature.startswith(("EXT_", "PREV_", "CC_", "INST_", "BUR_", "POS_"))
-    return not (feature in SENSITIVE or feature in LETTER_SKIP or building or feature.startswith("FLAG_DOCUMENT"))
+    # Social circle: other people's late payments. A real model factor, but citing it to an applicant reads as unfair
+    social = feature.endswith("_SOCIAL_CIRCLE")
+    return not (feature in SENSITIVE or feature in LETTER_SKIP or building or social or feature.startswith("FLAG_DOCUMENT"))
+
+
+def adjusted_terms_from(path: dict | None) -> dict | None:
+    """The recommended path to approval (from path.path_to_approval), formatted for the fact sheet."""
+    rec = (path or {}).get("recommended")
+    if not rec:
+        return None
+    return {"loan_amount": format_value("AMT_CREDIT", rec["loan_amount"]),
+            "regular_payment": format_value("AMT_ANNUITY", rec["regular_payment"]),
+            "number_of_payments": format_value("CREDIT_TERM", rec["n_payments"])}
 
 
 def build_letter_input(applicant_id: int, explanation: dict, raw_row, cutoff: float,
-                       n_reasons: int = 4, n_strengths: int = 3) -> LetterInput:
-    """Keep the top letter-friendly reasons in each direction; sensitive features never reach the prompt."""
+                       n_reasons: int = 4, n_strengths: int = 3, path: dict | None = None) -> LetterInput:
+    """Keep the top letter-friendly reasons in each direction; sensitive features never reach the prompt.
+
+    path: the applicant's path to approval; its recommended option becomes adjusted_terms (not for approvals).
+    """
     def keep(table, n):
         t = table[table["feature"].map(_letter_friendly)].head(n)
         return [{"code": f, "label": l, "value": v} for f, l, v in zip(t["feature"], t["label"], t["value"])]
@@ -119,9 +140,11 @@ def build_letter_input(applicant_id: int, explanation: dict, raw_row, cutoff: fl
     all_rows = explanation["all"]
     raises = all_rows[all_rows["shap"] > 0].sort_values("shap", ascending=False)
     lowers = all_rows[all_rows["shap"] < 0].sort_values("shap")
+    decision = decision_for(explanation["pd"], cutoff)
     return LetterInput(
         applicant_id=int(applicant_id),
-        decision=decision_for(explanation["pd"], cutoff),
+        decision=decision,
+        adjusted_terms=None if decision == "approve" else adjusted_terms_from(path),
         loan_amount=format_value("AMT_CREDIT", raw_row["AMT_CREDIT"]),
         regular_payment=format_value("AMT_ANNUITY", raw_row["AMT_ANNUITY"]),
         number_of_payments=format_value("CREDIT_TERM", raw_row["CREDIT_TERM"]),
@@ -137,9 +160,11 @@ JARGON = re.compile(r"\b(shap|log[- ]odds|algorithm|probability of default|PD|cu
 SENSITIVE_WORDS = re.compile(r"\b(age|aged|young|old(er)?|gender|male|female|married|marital|single|divorced|widow(ed)?|children|child|family status|pregnan\w*)\b", re.I)
 POSITIVE_FOR_DECLINE = re.compile(r"\b(congratulat\w*|pleased to approve|has been approved|you('re| are) approved)\b", re.I)
 # Comparisons the fact sheet never states (e.g. "longer than your past loans") - invented reasoning
-COMPARISON = re.compile(r"\b((longer|shorter|higher|lower|larger|smaller|bigger|greater) than|similar to|at (this|the same) level)\b", re.I)
+COMPARISON = re.compile(r"\b((longer|shorter|higher|lower|larger|smaller|bigger|greater)( \w+)? than|similar to|at (this|the same) level"
+                        r"|(a |the )?(longer|shorter) (repayment )?(term|period|schedule|window))\b", re.I)
 VEHICLE = re.compile(r"\b(car|vehicle)\b", re.I)
 TOOL_NAME = re.compile(r"Second\s?Look")       # case-sensitive: "take a second look" is fine
+AMOUNT = re.compile(r"\b\d{1,3}(?:,\d{3})+\b|\b\d{4,}\b")    # 1,000 and up, with or without commas
 
 
 def _personal_characteristic(body: str) -> str | None:
@@ -178,6 +203,13 @@ def check_letter(letter: Letter, li: LetterInput) -> list[str]:
             continue
         issues.append(f"possible invented comparison: '{m.group(0)}{compared_to[:20]}...' (describe factors only by their own value)")
         break
+    # Every amount in the letter (1,000 or more) must come from the fact sheet: no invented or mistyped figures
+    allowed_amounts = {a.replace(",", "") for a in AMOUNT.findall(li.fact_sheet())}
+    wrong = [a for a in AMOUNT.findall(letter.subject + " " + letter.body) if a.replace(",", "") not in allowed_amounts]
+    if wrong:
+        issues.append(f"quotes amounts that are not in the fact sheet: {wrong}")
+    if li.adjusted_terms and li.adjusted_terms["regular_payment"] not in letter.body:
+        issues.append(f"does not offer the adjusted terms (regular payment {li.adjusted_terms['regular_payment']})")
     if li.decision in ("decline", "under_review") and not letter.reasons_cited:
         issues.append("gives no reason for a decline / review")
     if li.decision in ("decline", "under_review") and POSITIVE_FOR_DECLINE.search(letter.body):

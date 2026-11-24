@@ -39,12 +39,14 @@ Keep the zip as is. The code reads CSVs straight from it (`src/secondlook/data.p
 data/raw/          Kaggle zip (not committed)
 data/interim/      cleaned tables, SQLite DB (not committed)
 data/processed/    model-ready features (not committed)
-notebooks/         01 EDA, 02 features, 03 modelling, 04 explainability, 05 letters
+notebooks/         01 EDA, 02 features, 03 modelling, 04 explainability, 05 letters,
+                   06 path to approval
 src/secondlook/    reusable Python package: data.py (load from zip), cleaning.py,
                    sql_features.py (SQLite + SQL aggregations), features.py (pipeline),
-                   modeling.py, explain.py (SHAP), letters.py (Claude), demo_bundle.py
+                   modeling.py, explain.py (SHAP), path.py (path to approval),
+                   letters.py (Claude), demo_bundle.py
 app/               Streamlit app (Home.py + pages/), demo_data/ bundle, requirements.txt
-tests/             pytest tests (letter guardrails, app smoke tests)
+tests/             pytest tests (letter guardrails, formatting, path to approval, app smoke tests)
 models/            trained model files (not committed)
 reports/figures/   charts used in the README and pitch
 docs/              proposal, feature dictionary, model card
@@ -78,7 +80,7 @@ streamlit run app/Home.py
 |---|---|
 | **Home** | Problem, headline results, how SecondLook works |
 | **Portfolio Dashboard** | Risk distribution, live cutoff and profit simulator, calibration, approvals vs score-only, thin-file results |
-| **Applicant Review** | One applicant: PD, decision, SHAP reasons, Claude letter (pre-drafted, or drafted live with an API key), officer decision |
+| **Applicant Review** | One applicant: PD, decision, SHAP reasons, re-scored path to approval (borrow less or a longer term), Claude letter that offers those terms (pre-drafted, or drafted live with an API key), officer decision |
 | **Model Card** | Model details, metrics, SHAP importance, fairness check, intended use and limitations |
 
 Live letter drafting needs `ANTHROPIC_API_KEY` in `.env` (locally) or in the app's secrets (cloud). Without a key, everything else works and pre-drafted letters are shown.
@@ -98,12 +100,12 @@ To rebuild the bundle after retraining (needs the full pipeline): `cd src && pyt
 pytest tests/
 ```
 
-24 tests: letter guardrail rules (16) and app smoke tests that run every page, the cutoff slider and the cached letters (8). No API calls.
+49 tests: letter guardrail rules (18), value formatting (17), path to approval (6) and app smoke tests that run every page, the cutoff slider and the cached letters (8). No API calls.
 
 ## Roadmap
 
-- **Phase 1, by Nov 26 (mock):** EDA, features, models, SHAP, Claude letters, Streamlit MVP.
-- **Phase 2, by Dec 2 (final):** path to approval, faithfulness and tone checks, fairness audit, personas, AI Analyst agent.
+- **Phase 1 (done):** EDA, features, models, SHAP, Claude letters, Streamlit MVP, deployed at [secondlook.streamlit.app](https://secondlook.streamlit.app).
+- **Phase 2, by Dec 2 (final):** path to approval (done), faithfulness and tone checks, fairness audit, personas, AI Analyst agent.
 
 ## Team
 
