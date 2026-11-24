@@ -28,7 +28,7 @@ LABELS = {
     "AMT_INCOME_TOTAL": "Income", "INCOME_PER_PERSON": "Income per family member",
     "YEARS_EMPLOYED": "Time in current job", "EMPLOYED_TO_AGE": "Job tenure relative to age", "AGE_YEARS": "Age",
     "NAME_EDUCATION_TYPE": "Education level", "NAME_INCOME_TYPE": "Income type", "NAME_FAMILY_STATUS": "Family status",
-    "NAME_CONTRACT_TYPE": "Loan type", "FLAG_OWN_CAR": "Owns a car", "OWN_CAR_AGE": "Age of car",
+    "NAME_CONTRACT_TYPE": "Loan type", "FLAG_OWN_CAR": "Owns a car", "OWN_CAR_AGE": "Age of the car the applicant already owns",
     "REGION_RATING_CLIENT_W_CITY": "Region rating (with city)", "REGION_RATING_CLIENT": "Region rating",
     "YEARS_SINCE_PHONE_CHANGE": "Time since phone number changed", "YEARS_SINCE_ID_PUBLISH": "Time since ID document changed",
     "YEARS_SINCE_REGISTRATION": "Time since registration changed", "DAYS_EMPLOYED_ANOM": "Not currently employed (e.g. pensioner)",
@@ -155,6 +155,10 @@ def format_value(feature: str, value) -> str:
         return f"{value:.2f}x"
     if feature in ("CREDIT_TERM", "PREV_AVG_TERM"):
         return f"about {value:.0f} payments"
+    if feature == "INST_MAX_DAYS_LATE":       # payment date minus due date: 0 or below means no payment was ever late
+        return "never late" if value <= 0 else f"{value:.0f} day{'s' if round(value) != 1 else ''}"
+    if feature == "OWN_CAR_AGE":
+        return f"{value:.0f} year{'s' if round(value) != 1 else ''} old"
     if "YEARS" in feature and feature not in NORMALISED:
         return format_duration(value)
     return f"{value:,.0f}" if float(value).is_integer() else f"{value:,.2f}"

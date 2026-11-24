@@ -1013,7 +1013,7 @@
   },
   "284410|under_review|v5|claude-haiku-5-5": {
     "subject": "Your loan application is under review",
-    "body": "Thank you for applying for a loan of 187,704. We have not yet made a final decision on your application. Because your application is close to the level we need to approve it, a loan officer will look at it personally before we decide.\n\nIn reviewing your application, we looked at a few factors that raised the estimated risk. Your average external credit score and your highest external credit score were both on the lower side. We also noticed that about 73% of your credit limits at other lenders are currently in use, and that your last loan at another lender was taken out recently. Lenders generally look at these factors because they help show how much new borrowing a person can comfortably manage.\n\nWe also noticed some genuine strengths. On one payment, the most days late is recorded as -11, which points to a payment made ahead of schedule. Your past loans also had an average term of about 12 payments, which shows you have repaid loans before.\n\nA loan officer may contact you about adjusting the loan terms, such as the amount or repayment schedule, so that the loan fits your situation. Your regular payment would be 10,904, over about 17 payments. Building a record of on-time payments is one of the most helpful things you can do for future applications. If you have questions, or would like the decision reviewed, you are welcome to ask.\n\nThe Lending Team",
+    "body": "Thank you for applying for a loan with us. We are writing to let you know that your application is under review. This means it is close to the level we need to approve it, so a loan officer will look at it personally before a final decision is made.\n\nWe considered several things about your application. Some factors that raised the estimated risk were your average external credit score, the highest external credit score on your file, the amount of debt you carry compared with your credit limits at other lenders, and how recently you took out your last loan at another lender. Lenders look at these because they give a picture of how much room there is in your budget for new payments.\n\nYou also have real strengths. You have never been late on an instalment payment, which shows a reliable repayment record. Your past loans have also typically run for about 12 payments, which gives us useful information about how you manage borrowing over time.\n\nA loan officer may contact you about adjusting the loan terms, such as the amount or the repayment schedule, so that the loan fits your situation. If you have questions in the meantime, please reply to this letter.\n\nThe Lending Team",
     "reasons_cited": [
       "EXT_SOURCE_MEAN",
       "EXT_SOURCE_MAX",
@@ -1028,11 +1028,11 @@
     "decision": "under_review",
     "checks_passed": true,
     "issues": [],
-    "attempts": 2,
-    "input_tokens": 3989,
-    "output_tokens": 1721,
-    "cost_usd": 0.001259,
-    "seconds": 9.5,
+    "attempts": 1,
+    "input_tokens": 1717,
+    "output_tokens": 470,
+    "cost_usd": 0.000407,
+    "seconds": 6.0,
     "model": "claude-haiku-5-5",
     "prompt_version": "v5",
     "fact_sheet": {
@@ -1049,8 +1049,8 @@
         },
         {
           "code": "BUR_YEARS_SINCE_LAST_LOAN",
-          "label": "Years since last loan at another lender",
-          "value": "0.1"
+          "label": "Time since last loan at another lender",
+          "value": "about 5 weeks"
         },
         {
           "code": "BUR_DEBT_TO_CREDIT",
@@ -1072,7 +1072,7 @@
         {
           "code": "INST_MAX_DAYS_LATE",
           "label": "Most days late on one payment",
-          "value": "-11"
+          "value": "never late"
         },
         {
           "code": "PREV_AVG_TERM",

@@ -32,5 +32,15 @@ def test_normalised_building_scores_are_not_durations():
     assert format_value("YEARS_BUILD_AVG", 0.62) == "0.62"
 
 
+@pytest.mark.parametrize("value,expected", [(-13, "never late"), (0, "never late"), (1, "1 day"), (12, "12 days")])
+def test_max_days_late_never_negative(value, expected):
+    assert format_value("INST_MAX_DAYS_LATE", value) == expected
+
+
+def test_car_age():
+    assert format_value("OWN_CAR_AGE", 3.0) == "3 years old"
+    assert format_value("OWN_CAR_AGE", 1.0) == "1 year old"
+
+
 def test_missing_value():
     assert format_value("YEARS_EMPLOYED", float("nan")) == "not available"
