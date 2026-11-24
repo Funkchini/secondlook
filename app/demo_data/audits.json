@@ -2942,7 +2942,7 @@
     "passed": false,
     "issues": [
       "\"Our decision was based mainly on credit scores from outside sources.\": not one of the reasons the model gave",
-      "\"The average of these scores, the lowest of them, and two individual scores were all low.\": value '2' does not match the fact sheet ('0.01')"
+      "\"The average of these scores, the lowest of them, and two individual scores were all low.\": misdescribes External credit score 2: The claim says two individual credit scores were low; the fact sheet lists one individual score, EXT_SOURCE_2 at 0.01, and the claim's value of 2 does not match a listed entry."
     ],
     "claims": [
       {
@@ -2988,7 +2988,7 @@
         "value": "2",
         "presented_as": "concern",
         "code": "EXT_SOURCE_2",
-        "verdict": "value '2' does not match the fact sheet ('0.01')"
+        "verdict": "misdescribes External credit score 2: The claim says two individual credit scores were low; the fact sheet lists one individual score, EXT_SOURCE_2 at 0.01, and the claim's value of 2 does not match a listed entry."
       },
       {
         "quote": "The loan amount you asked for matches the price of the goods",

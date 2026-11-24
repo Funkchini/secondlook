@@ -100,7 +100,7 @@ To rebuild the bundle after retraining (needs the full pipeline): `cd src && pyt
 pytest tests/
 ```
 
-59 tests: letter guardrail rules (19), letter audit (9, replaying saved Claude answers for one real and four deliberately broken letters), value formatting (17), path to approval (6) and app smoke tests that run every page, the cutoff slider, the cached letters and their audits (8). No API calls.
+60 tests: letter guardrail rules (19), letter audit (10, replaying saved Claude answers for one real and four deliberately broken letters), value formatting (17), path to approval (6) and app smoke tests that run every page, the cutoff slider, the cached letters and their audits (8). No API calls.
 
 ## Roadmap
 

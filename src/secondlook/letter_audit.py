@@ -125,6 +125,11 @@ def _close(a: float, b: float) -> bool:
     return abs(a - b) <= tol
 
 
+def _same_value(a: float, b: float) -> bool:
+    """Like _close, but a share may be written either way: '97%' in a letter equals '0.97x' on the fact sheet."""
+    return _close(a, b) or _close(a / 100, b) or _close(a * 100, b)
+
+
 def judge_claims(claims: list[dict], matches: list[dict], fact_sheet: dict) -> list[dict]:
     """Attach a verdict ('supported' | an issue string | 'not checked') to every claim."""
     risk = {f["code"]: f for f in fact_sheet.get("risk_factors", [])}
@@ -159,7 +164,7 @@ def judge_claims(claims: list[dict], matches: list[dict], fact_sheet: dict) -> l
             elif code in strong and c["presented_as"] == "concern":
                 verdict = f"presents a strength ({fact['label']}) as a concern"
             elif c.get("value") and _numbers(c["value"]) and _numbers(fact["value"]) and \
-                    not any(_close(n, f) for n in _numbers(c["value"]) for f in _numbers(fact["value"]) + loan_numbers):
+                    not any(_same_value(n, f) for n in _numbers(c["value"]) for f in _numbers(fact["value"]) + loan_numbers):
                 verdict = f"value '{c['value']}' does not match the fact sheet ('{fact['value']}')"
             elif not m.get("fair_description", True):
                 verdict = f"misdescribes {fact['label']}: {m.get('note', '')}"

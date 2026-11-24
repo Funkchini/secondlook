@@ -84,3 +84,10 @@ def test_general_statements_are_not_counted():
     s = summarise(judged, FACTS, review, {})
     assert s["n_claims"] == 0 and s["faithfulness"] == 1.0
     assert any("makes no offer" in i for i in s["issues"])     # a path existed but the letter offered nothing
+
+
+def test_percent_and_ratio_are_the_same_value():
+    facts = {**FACTS, "risk_factors": [{"code": "PREV_AVG_GRANTED_TO_APPLIED", "label": "Past loans granted vs amount requested", "value": "0.97x"}]}
+    c = claim("lenders granted about 97% of the amounts you requested", value="about 97%")
+    m = [{"claim_index": 0, "code": "PREV_AVG_GRANTED_TO_APPLIED", "fair_description": True, "note": ""}]
+    assert judge_claims([c], m, facts)[0]["verdict"] == "supported"
