@@ -36,7 +36,9 @@ s1, s2, s3, s4 = st.columns(4)
 s1.markdown("**1. Score**  \nA LightGBM model trained on 246,000 past loans estimates each applicant's probability of default (PD), using the application **and** credit history (SQL features from 6 history tables).")
 s2.markdown("**2. Flag**  \nApplicants just above the cutoff are flagged **under review** instead of auto-declined: the borderline group where a second look matters most.")
 s3.markdown("**3. Explain**  \nSHAP shows which factors raised or lowered each applicant's risk, in plain English. Sensitive traits are labelled and never used as reasons.")
-s4.markdown("**4. Communicate**  \nClaude drafts a clear, respectful letter from those reasons, checked by guardrails, for the loan officer to review and send.")
+s4.markdown("**4. Offer and communicate**  \nA re-scored *path to approval* finds the smallest change to the loan (borrow less, or more payments) that would be approved. "
+            "Claude drafts a clear, respectful letter from the reasons and that offer. Rule checks and an independent audit "
+            "(claims vs the model's reasons, and tone) flag anything for the loan officer to review before sending.")
 
 st.subheader("Explore the app")
 p1, p2, p3 = st.columns(3)
@@ -45,11 +47,11 @@ with p1:
     st.caption("How the model performs across the whole portfolio, with a live cutoff and profit simulator.")
 with p2:
     st.page_link("pages/2_Applicant_Review.py", label="🧑 Applicant Review", help="Open an applicant: score, reasons and letter.")
-    st.caption("What a loan officer sees for one applicant: score, decision, SHAP reasons and the drafted letter.")
+    st.caption("What a loan officer sees for one applicant: score, decision, SHAP reasons, path to approval and the drafted letter.")
 with p3:
     st.page_link("pages/3_Model_Card.py", label="📄 Model Card", help="How the model was built, its limits and fairness checks.")
     st.caption("How the model was trained and evaluated, its limitations, and fairness checks.")
 
-st.info("**Phase 1 MVP** (mock presentation). Coming in Phase 2: a re-scored *path to approval* for borderline applicants, "
-        "an independent faithfulness and tone check on letters, a full fairness audit and an AI analyst agent for portfolio questions.")
+st.info("**Phase 2 in progress.** Live now: the re-scored *path to approval* and an independent faithfulness and tone audit "
+        "of every letter. Coming next: a full fairness audit, borrower personas and an AI analyst agent for portfolio questions.")
 footer()

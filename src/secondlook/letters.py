@@ -27,9 +27,10 @@ from .explain import SENSITIVE, category_of, format_value
 
 MODEL = "claude-haiku-5-5"        # chosen in the proposal: fast and low-cost for short letters
 EFFORT = "low"
-PROMPT_VERSION = "v6"     # v2: no invented comparisons; v3: no internal tool name, letter-friendly factors;
+PROMPT_VERSION = "v7"     # v2: no invented comparisons; v3: no internal tool name, letter-friendly factors;
                           # v4: no job/employer; v5: refined guardrails (car age, comparisons);
-                          # v6: offers the re-scored path to approval (adjusted_terms) and checks every amount
+                          # v6: offers the re-scored path to approval (adjusted_terms) and checks every amount;
+                          # v7: no offer of other terms when there is no path (found by the faithfulness audit)
 CACHE_PATH = PROCESSED_DIR / "letter_cache.json"
 
 # Haiku 5.5 list prices, USD per million tokens (prompts under 100K tokens)
@@ -51,7 +52,7 @@ Write a short letter to the applicant (120-220 words):
 - Never mention or hint at age, gender, marital or family status, children, or any other personal characteristic.
 - No technical terms: never say SHAP, model, algorithm, log-odds, probability of default, PD, score cutoff or threshold value.
 - "SecondLook" is the lender's internal tool. Never mention it to the applicant.
-- If the fact sheet includes "adjusted_terms", the loan could be approved on those terms (a smaller amount and/or more payments). For "under_review", say a loan officer may be able to offer a loan of that amount with regular payments of about that payment over that number of payments. For "decline", say the application cannot be approved as requested, but a loan on those terms may be possible and they can contact us to discuss it. Present it as a possibility the loan officer will confirm, never a promise, and quote the amounts exactly as written. If there is no "adjusted_terms", do not suggest any specific amount or term.
+- If the fact sheet includes "adjusted_terms", the loan could be approved on those terms (a smaller amount and/or more payments). For "under_review", say a loan officer may be able to offer a loan of that amount with regular payments of about that payment over that number of payments. For "decline", say the application cannot be approved as requested, but a loan on those terms may be possible and they can contact us to discuss it. Present it as a possibility the loan officer will confirm, never a promise, and quote the amounts exactly as written. If there is no "adjusted_terms", no change to the loan would be approved: do not say that a loan on different or other terms may be possible, do not say a loan officer may be able to offer anything, and do not repeat the requested amount as an offer.
 
 In reasons_cited, list the codes of the risk factors you mention. In strengths_cited, list the codes of the strengths you mention. Only use codes from the fact sheet."""
 
@@ -165,6 +166,9 @@ COMPARISON = re.compile(r"\b((longer|shorter|higher|lower|larger|smaller|bigger|
 VEHICLE = re.compile(r"\b(car|vehicle)\b", re.I)
 TOOL_NAME = re.compile(r"Second\s?Look")       # case-sensitive: "take a second look" is fine
 AMOUNT = re.compile(r"\b\d{1,3}(?:,\d{3})+\b|\b\d{4,}\b")    # 1,000 and up, with or without commas
+# An offer of other terms. "may contact you about adjusting the loan terms" stays allowed for under-review letters.
+NO_PATH_OFFER = re.compile(r"\bmay be able to offer\b|\bloan on (different|other|alternative|new) terms\b"
+                           r"|\b(different|other|alternative|new) (loan )?terms (may|could|might) be possible\b", re.I)
 
 
 def _personal_characteristic(body: str) -> str | None:
@@ -210,6 +214,8 @@ def check_letter(letter: Letter, li: LetterInput) -> list[str]:
         issues.append(f"quotes amounts that are not in the fact sheet: {wrong}")
     if li.adjusted_terms and li.adjusted_terms["regular_payment"] not in letter.body:
         issues.append(f"does not offer the adjusted terms (regular payment {li.adjusted_terms['regular_payment']})")
+    if not li.adjusted_terms and (m := NO_PATH_OFFER.search(letter.body)):
+        issues.append(f"suggests other loan terms ('{m.group(0)}') but no change to the loan would be approved")
     if li.decision in ("decline", "under_review") and not letter.reasons_cited:
         issues.append("gives no reason for a decline / review")
     if li.decision in ("decline", "under_review") and POSITIVE_FOR_DECLINE.search(letter.body):

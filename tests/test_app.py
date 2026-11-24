@@ -32,3 +32,5 @@ def test_applicant_review_shows_cached_letter(group):
     assert not at.exception
     assert any("Subject:" in m.value for m in at.markdown), "cached letter not shown"
     assert at.text_area[0].value.strip().endswith("The Lending Team")
+    labels = [m.label for m in at.metric]
+    assert "Claims supported" in labels, "independent audit not shown next to the letter"

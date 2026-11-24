@@ -52,6 +52,13 @@ def load_letters() -> dict:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
+@st.cache_data(show_spinner=False)
+def load_audits() -> dict:
+    """Independent faithfulness and tone audits of the pre-drafted letters (src/secondlook/letter_audit.py)."""
+    path = BUNDLE / "audits.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+
 @st.cache_data(show_spinner="Scoring applicants...")
 def score_applicants() -> pd.DataFrame:
     """PD and decision for every applicant in the bundle."""

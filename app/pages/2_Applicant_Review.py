@@ -6,7 +6,7 @@ import streamlit as st
 st.set_page_config(page_title="Applicant Review · SecondLook", page_icon="🧑", layout="wide")
 
 from lib import (DECISION_STYLE, L, P, api_key_available, decision_badge, explain_applicant, footer,  # noqa: E402
-                 load_applicants, load_letters, load_model, money, path_for, score_applicants)
+                 load_applicants, load_audits, load_letters, load_model, money, path_for, score_applicants)
 
 _, meta, _ = load_model()
 scored = score_applicants()
@@ -135,6 +135,11 @@ if letter is None:
                 try:
                     letter = L.generate_letter(li, use_cache=False)
                     st.session_state[f"letter_{key}"] = letter
+                    try:
+                        from secondlook.letter_audit import audit_letter
+                        st.session_state[f"audit_{key}"] = {k: v for k, v in audit_letter(letter, use_cache=False).items() if k != "raw"}
+                    except Exception as e:  # the letter is still shown; only the audit is missing
+                        st.session_state[f"audit_{key}"] = {"error": str(e)}
                     st.rerun()
                 except Exception as e:     # API, network or refusal: show it, don't crash the demo
                     st.error(f"Could not draft the letter: {e}")
@@ -158,6 +163,38 @@ if letter:
         st.caption(f"Drafted by {letter['model']} · prompt {letter['prompt_version']} · {letter['attempts']} attempt(s) · "
                    f"${letter['cost_usd']:.5f}")
         st.download_button("Download letter (.txt)", f"Subject: {letter['subject']}\n\n{letter['body']}", file_name=f"letter_{sid}.txt")
+
+    # ------------------------------------------------------------ independent audit
+    audit = load_audits().get(key) or st.session_state.get(f"audit_{key}")
+    st.markdown("#### 🔍 Independent audit of this letter")
+    if audit is None:
+        st.caption("No audit for this letter yet.")
+    elif "error" in audit:
+        st.caption(f"The audit could not run: {audit['error']}")
+    else:
+        a1, a2, a3, a4, a5 = st.columns(5)
+        a1.metric("Claims supported", f"{audit['n_supported']} of {audit['n_claims']}",
+                  help="Each factual claim is checked against the model's real reasons: right factor, right direction, "
+                       "matching numbers, fair wording. General statements are not counted.")
+        t = audit["tone"]
+        a2.metric("Respectful", f"{t['respectful']}/5")
+        a3.metric("Clear", f"{t['clear']}/5")
+        a4.metric("Empathetic", f"{t['empathetic']}/5")
+        a5.metric("VADER sentiment", f"{t['vader_compound']:+.2f}",
+                  help="Word-list sentiment from -1 to +1. It rates almost every polite letter as very positive, "
+                       "even a rude one, so the Claude rubric is the one to trust for tone.")
+        if audit["passed"]:
+            st.success("No issues found. Every checked claim matches the model's reasons and the tone is respectful.")
+        else:
+            st.warning("**Worth a second look before sending:**\n" + "\n".join(f"- {i}" for i in audit["issues"]))
+        with st.expander("Claim by claim"):
+            st.dataframe(pd.DataFrame([{"Claim in the letter": c["quote"], "Type": c["kind"], "Presented as": c["presented_as"],
+                                        "Verdict": c["verdict"]} for c in audit["claims"]]),
+                         hide_index=True, use_container_width=True)
+        st.caption(f"Claude reads only the letter and lists its claims, a second call matches them to the fact sheet, and Python "
+                   f"checks direction and numbers. Tone note: {t['note']} · Audit cost ${audit['cost_usd']:.5f}. "
+                   "The audit can be wrong (about half of its flags were real problems in our test), so treat a flag as "
+                   "a prompt to re-read, not a verdict.")
 
 # ---------------------------------------------------------------- officer decision
 st.subheader("Loan officer decision")

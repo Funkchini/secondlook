@@ -83,3 +83,11 @@ def test_adjusted_terms_must_be_offered_exactly():
     assert any("does not offer the adjusted terms" in i for i in issues)
     issues = check_letter(make_letter("We may offer a loan of 440,000 with payments of about 18,000."), li)
     assert any("amounts that are not in the fact sheet" in i for i in issues)
+
+
+def test_no_offer_of_other_terms_without_a_path():
+    for text in ("A loan on different terms may be possible.", "A loan officer may be able to offer a smaller loan."):
+        issues = check_letter(make_letter(text), make_input("decline"))
+        assert any("no change to the loan would be approved" in i for i in issues), text
+    # the under-review wording about adjusting terms is still allowed
+    assert check_letter(make_letter("They may contact you about adjusting the loan terms."), make_input("under_review")) == []

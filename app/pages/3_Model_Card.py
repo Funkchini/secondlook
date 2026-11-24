@@ -108,7 +108,7 @@ st.markdown("""
 - **Data:** historical, anonymised Home Credit data; the competition does not disclose which country it comes from. Before real use, the model would need to be validated on local (e.g. Philippine) applicants.
 - **Probabilities** are well calibrated on the test set, but calibration should be monitored over time as the applicant mix changes.
 - **Explanations** (SHAP) describe *the model's* reasoning, not causes in the real world.
-- **Letters** are drafted by Claude and checked by rules; rules can't verify meaning, so a loan officer reviews every letter. Phase 2 adds an independent faithfulness check.
+- **Letters** are drafted by Claude and checked by rules, then by an independent audit (a second Claude reads only the letter; Python checks its claims against the model's reasons). In testing it caught all four planted errors, but about half of its flags on real letters were false alarms and its verdicts vary between runs, so a loan officer reviews every letter.
 - **Profit figures** use illustrative assumptions, adjustable on the dashboard.
 """)
 footer()
