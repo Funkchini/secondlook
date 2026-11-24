@@ -59,6 +59,12 @@ def load_audits() -> dict:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
+@st.cache_data(show_spinner=False)
+def load_fairness() -> dict:
+    """Fairness audit results saved by notebooks/08_fairness_audit.ipynb (tables, bootstrap gaps, fix experiment)."""
+    return json.loads((BUNDLE / "fairness.json").read_text(encoding="utf-8"))
+
+
 @st.cache_data(show_spinner="Scoring applicants...")
 def score_applicants() -> pd.DataFrame:
     """PD and decision for every applicant in the bundle."""

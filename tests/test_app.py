@@ -34,3 +34,11 @@ def test_applicant_review_shows_cached_letter(group):
     assert at.text_area[0].value.strip().endswith("The Lending Team")
     labels = [m.label for m in at.metric]
     assert "Claims supported" in labels, "independent audit not shown next to the letter"
+
+
+def test_model_card_shows_fairness_audit_and_decision():
+    at = AppTest.from_file(str(APP / "pages/3_Model_Card.py"), default_timeout=180).run()
+    assert not at.exception
+    assert len(at.tabs) == 3                                         # gender, age band, credit file
+    assert any("Decision: we ship the model with all features" in s.value for s in at.success)
+    assert any("bootstrap resamples" in c.value for c in at.caption)

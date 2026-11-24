@@ -52,6 +52,7 @@ with p3:
     st.page_link("pages/3_Model_Card.py", label="📄 Model Card", help="How the model was built, its limits and fairness checks.")
     st.caption("How the model was trained and evaluated, its limitations, and fairness checks.")
 
-st.info("**Phase 2 in progress.** Live now: the re-scored *path to approval* and an independent faithfulness and tone audit "
-        "of every letter. Coming next: a full fairness audit, borrower personas and an AI analyst agent for portfolio questions.")
+st.info("**Phase 2 in progress.** Live now: the re-scored *path to approval*, an independent faithfulness and tone audit "
+        "of every letter, and a full fairness audit on the Model Card. Coming next: borrower personas and an AI analyst agent "
+        "for portfolio questions.")
 footer()

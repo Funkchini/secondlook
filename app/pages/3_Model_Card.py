@@ -6,10 +6,9 @@ import streamlit as st
 
 st.set_page_config(page_title="Model Card · SecondLook", page_icon="📄", layout="wide")
 
-from lib import applicant_X, footer, label_of, load_applicants, load_model, load_portfolio  # noqa: E402
+from lib import applicant_X, footer, label_of, load_applicants, load_fairness, load_model  # noqa: E402
 
 booster, meta, explainer = load_model()
-df = load_portfolio()
 m = meta["metrics"]
 
 st.title("📄 Model Card")
@@ -63,43 +62,71 @@ st.plotly_chart(fig, use_container_width=True)
 st.caption("Average size of each factor's push on the score, over the 300 applicants in this demo. "
            "External credit scores dominate, followed by past repayment behaviour and loan structure.")
 
-st.subheader("Fairness check (preview)")
-st.markdown("Gender is **not** a model input. We still check whether outcomes differ between groups, because other features can act as proxies.")
-approved = df["PD_LGBM"] < meta["cutoff"]
-df = df.assign(Approved=approved, Age_group=pd.cut(df["AGE_YEARS"], [20, 30, 40, 50, 60, 70], labels=["20-29", "30-39", "40-49", "50-59", "60-69"]))
+st.subheader("Fairness audit")
+fair = load_fairness()
+exp = fair["experiment"]
+st.markdown(f"""
+Are good borrowers treated equally across **gender**, **age** and **thin credit files**? Measured on all
+{fair['n_test']:,} test applicants at the shipped cutoff (approve if PD < {fair['cutoff']:.2f}). Gender is **not** a model
+input, but other features can act as proxies; age **is** an input. Full method: `notebooks/08_fairness_audit.ipynb`.
+""")
 
+COLS = {"Applicants": "{:,}", "Default rate": "{:.1%}", "Approval rate": "{:.1%}", "Approval rate of repayers": "{:.1%}",
+        "Default rate of approved": "{:.1%}", "Mean predicted PD": "{:.1%}", "Four-fifths ratio": "{:.2f}"}
+gaps = pd.DataFrame(fair["gaps"])
+for tab, (grouping, rows) in zip(st.tabs(list(fair["tables"])), fair["tables"].items()):
+    with tab:
+        t = pd.DataFrame(rows).set_index("Group")[list(COLS)]
+        st.dataframe(t.style.format(COLS), use_container_width=True)
+        g = gaps[(gaps["Grouping"] == grouping) & (gaps["Metric"] == "Approval rate of repayers")].iloc[0]
+        r = gaps[(gaps["Grouping"] == grouping) & (gaps["Metric"] == "Four-fifths ratio")].iloc[0]
+        st.caption(f"**{g['Comparison']}:** repayers approved {g['Gap'] * 100:+.1f} points more often "
+                   f"(95% interval {g['95% CI low'] * 100:+.1f} to {g['95% CI high'] * 100:+.1f}, {fair['n_boot']:,} bootstrap resamples). "
+                   f"Four-fifths ratio {r['Gap']:.2f} ({r['95% CI low']:.2f} to {r['95% CI high']:.2f}).")
 
-def fairness(by):
-    g = df.groupby(by, observed=True)
-    t = pd.DataFrame({
-        "Applicants": g.size(),
-        "Default rate": g["TARGET"].mean(),
-        "Approval rate": g["Approved"].mean(),
-        "Approval rate of repayers": df[df["TARGET"] == 0].groupby(by, observed=True)["Approved"].mean(),
-        "Default rate of approved": df[df["Approved"]].groupby(by, observed=True)["TARGET"].mean(),
-    })
-    return t[t["Applicants"] >= 100]          # tiny groups (e.g. 2 'unknown' gender) give unreliable rates
-
-
-fmt = {"Applicants": "{:,}", "Default rate": "{:.1%}", "Approval rate": "{:.1%}", "Approval rate of repayers": "{:.1%}",
-       "Default rate of approved": "{:.1%}"}
-fg = fairness(df["CODE_GENDER"].rename("Gender"))
-fa = fairness(df["Age_group"].rename("Age group"))
-st.markdown("**By gender**")
-st.dataframe(fg.style.format(fmt), use_container_width=True)
-st.markdown("**By age group**")
-st.dataframe(fa.style.format(fmt), use_container_width=True)
+age = {row["Group"]: row for row in fair["tables"]["Age band"]}
 st.markdown(f"""
 **What this shows**
-- Approval rates follow each group's actual default rate, and in **every** group the approved loans default less often than the group overall.
-- **Equal-opportunity gap:** among applicants who actually **repaid**, approval rates still differ:
-  **{fg.loc['M', 'Approval rate of repayers']:.0%}** for men vs **{fg.loc['F', 'Approval rate of repayers']:.0%}** for women, and
-  **{fa['Approval rate of repayers'].iloc[0]:.0%}** for ages 20-29 vs **{fa['Approval rate of repayers'].iloc[-1]:.0%}** for ages 60-69.
-  Good young and male borrowers are declined more often than good older and female ones.
-- Gender is not a model input, but age is, and other features (job, employer, external scores) correlate with both. This is the kind of
-  gap a **human second look** is meant to catch, and the Phase 2 fairness audit will test whether constraining age-related features
-  narrows it without losing accuracy.
+- **Calibrated in every group:** mean predicted PD is within 1 point of each group's real default rate, so one cutoff means the same risk for everyone.
+- **Passes the four-fifths check:** no group's approval rate is below 0.8 of the best group's. Ages 20-29 come closest at **{age['20-29']['Four-fifths ratio']:.2f}**.
+- **But good borrowers are not approved equally, and the gaps are real:** {age['20-29']['Approval rate of repayers']:.0%} of repayers aged 20-29 were approved
+  vs {age['60-69']['Approval rate of repayers']:.0%} aged 60-69. Men and thin-file repayers are also approved less often. Every bootstrap interval excludes zero.
+- Approved loans in those groups still default more, so the model is not harsher on them than their risk warrants. When real default rates differ,
+  a model can't be calibrated **and** give repayers equal approval rates at once.
 """)
+
+st.markdown("**Fix experiment: retrain without the sensitive features**")
+st.caption("Removed: " + ", ".join(f"`{f}`" for f in exp["dropped"]) + ". Same split, settings and tree-count rule.")
+ROWS = {"ROC AUC": "{:.4f}", "Approval rate": "{:.1%}", "Good borrowers declined": "{:,}", "Profit (billions)": "{:.3f}",
+        "Age band: Approval rate of repayers gap": "pts", "Age band: Four-fifths ratio": "{:.3f}",
+        "Gender: Approval rate of repayers gap": "pts", "Credit file: Approval rate of repayers gap": "pts"}
+
+
+def fmt_cell(row, m):
+    v = m[row]
+    if ROWS[row] == "pts":
+        lo, hi = m[row.replace(" gap", " CI")]
+        return f"{v * 100:+.1f} pts ({lo * 100:+.1f} to {hi * 100:+.1f})"
+    if "ratio" in row:
+        lo, hi = m[row + " CI"]
+        return f"{v:.3f} ({lo:.3f} to {hi:.3f})"
+    return ROWS[row].format(v)
+
+
+cmp = pd.DataFrame({name: {r.replace(": Approval rate of repayers gap", ": repayer approval gap"): fmt_cell(r, m) for r in ROWS}
+                    for name, m in exp["models"].items()})
+st.dataframe(cmp, use_container_width=True)
+a = {row["Group"]: row for row in exp["age"]}
+st.markdown(f"""
+- **Removing age made the age gap worse.** Without age, the model still sees features that go with being young (short job tenure, a new ID,
+  a short credit history) but can't judge them in context, so it overstates young applicants' risk
+  ({a['20-29']['Mean PD, without sensitive']:.1%} predicted vs {a['20-29']['Actual default rate']:.1%} actual) and the 20-29 band drops **below** the four-fifths line.
+- Accuracy dips slightly, profit is a wash (under 0.4% either way), and the gender and thin-file gaps barely move.
+- A looser cutoff narrows every gap, but for both models alike; the shipped model at the same cutoff is still fairer by age.
+""")
+st.success("**Decision: we ship the model with all features.** Removing sensitive features cost accuracy and made the age gap worse; "
+           "instead, sensitive traits are never cited as reasons, borderline applicants (where young and thin-file applicants are "
+           "over-represented) get a human second look, and declined applicants get a path to approval.")
 
 st.subheader("Intended use and limitations")
 st.markdown("""
@@ -109,6 +136,7 @@ st.markdown("""
 - **Probabilities** are well calibrated on the test set, but calibration should be monitored over time as the applicant mix changes.
 - **Explanations** (SHAP) describe *the model's* reasoning, not causes in the real world.
 - **Letters** are drafted by Claude and checked by rules, then by an independent audit (a second Claude reads only the letter; Python checks its claims against the model's reasons). In testing it caught all four planted errors, but about half of its flags on real letters were false alarms and its verdicts vary between runs, so a loan officer reviews every letter.
+- **Fairness:** good young, male and thin-file borrowers are approved less often than others (see the audit above). Outcomes are only known for past *approved* loans, and intersections (e.g. young men with thin files) were not audited. Re-run the audit on new applicants.
 - **Profit figures** use illustrative assumptions, adjustable on the dashboard.
 """)
 footer()
