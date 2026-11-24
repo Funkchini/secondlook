@@ -4,6 +4,8 @@
 
 A Group 3 Capstone Project for Uplift Code Camp, Python for Data and AI (Batch 3).
 
+**Live app:** [secondlook.streamlit.app](https://secondlook.streamlit.app) · **Written summary:** [docs/SecondLook - Summary.pdf](docs/SecondLook%20-%20Summary.pdf)
+
 ## Problem
 
 About half of Filipino adults have no formal financial account, and thin credit files get many of them declined with no explanation.
@@ -18,6 +20,52 @@ About half of Filipino adults have no formal financial account, and thin credit 
 4. Suggests a realistic path to approval (never age, gender or past defaults).
 5. Writes a plain-language decision letter with Claude, then checks it against the model.
 6. Answers portfolio questions in plain English through an AI agent.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph offline["Offline: notebooks 01-10 (this machine)"]
+        K["Kaggle zip<br/>307,511 applicants<br/>+ 6 history tables"] --> C["Clean<br/>cleaning.py"]
+        C --> S["SQLite + SQL aggregates<br/>sql_features.py"]
+        S --> F["Feature table<br/>features.py"]
+        F --> M["LightGBM model<br/>modeling.py"]
+        M --> X["SHAP reasons<br/>explain.py"]
+        X --> P["Path to approval<br/>path.py"]
+        X --> L["Claude letters + audit<br/>letters.py, letter_audit.py"]
+        M --> FA["Fairness audit<br/>fairness.py"]
+        M --> PE["K-Means personas<br/>personas.py"]
+    end
+    offline --> B[("app/demo_data bundle<br/>model, 61,503 test predictions,<br/>300 applicants, letters,<br/>fairness, personas, analyst.db")]
+    subgraph app["Streamlit app (secondlook.streamlit.app)"]
+        B --> D["Portfolio Dashboard<br/>+ Personas"]
+        B --> R["Applicant Review<br/>reasons, path, letter, audit"]
+        B --> MC["Model Card<br/>+ fairness audit"]
+        B --> AI["AI Analyst<br/>agent.py"]
+    end
+    AI <-->|"tool calls: SQL, SHAP,<br/>path, fairness"| H["Claude Haiku 5.5"]
+    R <-->|"live letters"| H
+```
+
+The heavy work (2.3 GB SQLite database, training, SHAP, the audits) runs offline in the notebooks. Its results are saved into a small bundle (`app/demo_data/`), so the app runs on Streamlit Cloud without the Kaggle data. Claude is called only for live letters and the AI Analyst.
+
+## Results
+
+All figures are on the **61,503 test applicants** (20%) the model never saw during training.
+
+| Area | Result | Where |
+|---|---|---|
+| Model | LightGBM ROC AUC **0.786** (5-fold CV 0.784 ± 0.002) vs 0.773 for logistic regression; calibrated within about 1 point in every decile | notebook 03 |
+| Decision rule | Approve if PD < 0.17 (profit-maximising): **88%** approved, **5.3%** default rate among approved (8.07% overall) | notebook 03 |
+| Business value | About **14% more approvals at the same 5% default rate** than ranking by external credit score alone | notebook 03 |
+| The opportunity | **71%** of the applicants we don't approve would have repaid; **2,611** are in the under-review band (PD 0.17-0.22) | notebooks 03, 09 |
+| Explanations | SHAP values add up to the model's output exactly; under 1% of borderline applicants have a sensitive trait among their top 3 reasons | notebook 04 |
+| Path to approval | **90.1%** of under-review and **31.3%** of declined applicants have a re-scored path (borrow less or more payments) | notebook 06 |
+| Letters | 30 of 30 demo letters pass the guardrail rules, about $0.0007 each | notebook 05 |
+| Letter audit | **91.6%** of claims supported; catches all 4 planted errors; 9 of 16 flags (56%) are real problems, so it is a triage aid for the officer | notebook 07 |
+| Fairness | Calibrated in every group and passes the four-fifths check (closest: ages 20-29 at **0.82**). But repayers aged 20-29 are approved **83.1%** of the time vs **97.2%** at 60-69, and every bootstrap interval excludes zero. Retraining without the sensitive features made the age gap *worse*, so we ship the full model with human review | notebook 08 |
+| Personas | Five K-Means personas among the 7,263 not approved; "Newer job, clean record" is the largest (41%). Repayment is 70-73% in every persona | notebook 09 |
+| AI Analyst | **20 of 20** test answers correct over two runs (checked against pandas), 18 of 18 off-topic probes handled, about **$0.0008** per question | notebook 10 |
 
 ## Data
 
@@ -54,7 +102,7 @@ app/               Streamlit app (Home.py + pages/), demo_data/ bundle, requirem
 tests/             pytest tests (letter guardrails, letter audit, fairness, personas, AI Analyst, formatting, path to approval, app smoke tests)
 models/            trained model files (not committed)
 reports/figures/   charts used in the README and pitch
-docs/              proposal, feature dictionary, model card
+docs/              written summary, feature dictionary
 ```
 
 ## Setup
@@ -110,10 +158,22 @@ pytest tests/
 
 102 tests: letter guardrail rules (19), letter audit (10, replaying saved Claude answers for one real and four deliberately broken letters), AI Analyst (24: SQL safety, the agent loop with a scripted client, off-topic handling, follow-up sources, and the ten test questions, scope probes and a follow-up conversation graded from recorded runs), value formatting (17), path to approval (6), fairness metrics (5), personas (5) and app smoke tests that run every page, the cutoff slider, the cached letters and their audits, the fairness audit, the Personas tab and the AI Analyst's question and off-topic limits (16). No API calls.
 
+## Limitations
+
+- **Decision support, not automation.** A loan officer makes every final decision and reviews every letter.
+- **Unknown country of origin.** The Kaggle data is anonymised and its country is not disclosed. The model would need to be validated on Philippine applicants before real use.
+- **Outcomes are only known for past approved loans,** so the model has never seen how applicants the lender declined would have behaved.
+- **Fairness gaps remain.** Good young, male and thin-file borrowers are approved less often. Intersections (for example young men with thin files) were not audited.
+- **SHAP explains the model, not the world.** A reason is what drove the score, not a proven cause.
+- **The letter audit is a triage tool:** about half its flags are false alarms and its verdicts vary between runs. Letters are respectful but low on empathy.
+- **The AI Analyst was tested on ten questions we wrote,** about data we know. Vaguer questions will be less reliable, which is why every answer shows its queries.
+- **Profit figures use illustrative assumptions** (+15% of the loan on repayment, −60% on default), adjustable on the dashboard.
+
 ## Roadmap
 
 - **Phase 1 (done):** EDA, features, models, SHAP, Claude letters, Streamlit MVP, deployed at [secondlook.streamlit.app](https://secondlook.streamlit.app).
-- **Phase 2, by Dec 2 (final):** path to approval (done), faithfulness and tone checks (done), fairness audit (done), personas (done), AI Analyst agent (done); polish and written summary next.
+- **Phase 2 (done):** path to approval, faithfulness and tone audit, fairness audit, personas, AI Analyst agent, written summary.
+- **Next, if continued:** validate on local applicants, audit intersections of groups, raise letter empathy, and monitor calibration over time.
 
 ## Team
 

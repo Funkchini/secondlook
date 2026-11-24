@@ -6,7 +6,8 @@ import streamlit as st
 
 st.set_page_config(page_title="Model Card · SecondLook", page_icon="📄", layout="wide")
 
-from lib import applicant_X, footer, label_of, load_applicants, load_fairness, load_model  # noqa: E402
+from lib import (applicant_X, footer, label_of, load_applicants, load_audits, load_fairness, load_model,  # noqa: E402
+                 load_personas)
 
 booster, meta, explainer = load_model()
 m = meta["metrics"]
@@ -61,6 +62,22 @@ fig.update_layout(height=450, margin=dict(t=10))
 st.plotly_chart(fig, use_container_width=True)
 st.caption("Average size of each factor's push on the score, over the 300 applicants in this demo. "
            "External credit scores dominate, followed by past repayment behaviour and loan structure.")
+
+st.subheader("What SecondLook adds to the model (Phase 2)")
+pers = load_personas()
+has_path = pers.groupby("DECISION")["has_path"].mean()
+audits = load_audits().values()
+n_claims, n_ok = sum(a["n_claims"] for a in audits), sum(a["n_supported"] for a in audits)
+repaid = 1 - pers.groupby("persona", observed=True)["TARGET"].mean()
+largest = pers["persona"].value_counts(normalize=True)
+st.markdown(f"""
+| Part | Result | How it was checked |
+|---|---|---|
+| **Path to approval** | **{has_path['under_review']:.1%}** of under-review and **{has_path['decline']:.1%}** of declined applicants have one (borrow less, or more payments) | Every option is re-scored by the real model and must land at least 0.5 points under the cutoff; only loan terms change (notebook 06) |
+| **Letter audit** | **{n_ok / n_claims:.1%}** of the {n_claims} claims in the {len(audits)} demo letters are supported by the model's reasons; {sum(not a['issues'] for a in audits)} letters have no flag | A second Claude lists the claims, Python checks them against the SHAP facts; it caught all 4 planted errors, but only 9 of its 16 flags were real problems (notebook 07) |
+| **Borrower personas** | {len(pers):,} not-approved applicants in 5 K-Means groups; the largest is *{largest.index[0]}* ({largest.iloc[0]:.0%}). Repayment is {repaid.min():.0%}-{repaid.max():.0%} in every persona | Silhouette score and an elbow plot to choose k; the groups follow the credit file far more than age or gender (notebook 09) |
+| **AI Analyst** | 20 of 20 test answers correct over two runs, about $0.0008 a question | Each expected answer computed independently in pandas; answers read by hand, and off-topic probes tested (notebook 10) |
+""")
 
 st.subheader("Fairness audit")
 fair = load_fairness()
@@ -137,6 +154,9 @@ st.markdown("""
 - **Explanations** (SHAP) describe *the model's* reasoning, not causes in the real world.
 - **Letters** are drafted by Claude and checked by rules, then by an independent audit (a second Claude reads only the letter; Python checks its claims against the model's reasons). In testing it caught all four planted errors, but about half of its flags on real letters were false alarms and its verdicts vary between runs, so a loan officer reviews every letter.
 - **Fairness:** good young, male and thin-file borrowers are approved less often than others (see the audit above). Outcomes are only known for past *approved* loans, and intersections (e.g. young men with thin files) were not audited. Re-run the audit on new applicants.
+- **Paths to approval** change only the loan amount and number of payments, and are judged by the model alone. They have not been tested with real borrowers, and a smaller loan may not meet the applicant's need.
+- **Personas** describe the test applicants the model doesn't approve. They are a summary for planning, not a rule for any one applicant.
+- **The AI Analyst** was tested on ten questions we wrote about data we know. Vaguer questions will be less reliable, so every answer shows its SQL and tool calls.
 - **Profit figures** use illustrative assumptions, adjustable on the dashboard.
 """)
 footer()

@@ -42,6 +42,9 @@ def test_model_card_shows_fairness_audit_and_decision():
     assert len(at.tabs) == 3                                         # gender, age band, credit file
     assert any("Decision: we ship the model with all features" in s.value for s in at.success)
     assert any("bootstrap resamples" in c.value for c in at.caption)
+    phase2 = next(m.value for m in at.markdown if "**Path to approval**" in m.value)
+    assert "**90.1%** of under-review and **31.3%** of declined" in phase2       # notebook 06
+    assert "**91.6%** of the 178 claims in the 30 demo letters" in phase2        # notebook 07
 
 
 def test_dashboard_personas_tab():
