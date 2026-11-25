@@ -3,10 +3,10 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-st.set_page_config(page_title="Applicant Review · SecondLook", page_icon="🧑", layout="wide")
+from lib import (BRAND, DECISION_STYLE, L, P, api_key_available, decision_badge, explain_applicant, footer, load_applicants,
+                 load_audits, load_letters, load_model, money, page_setup, path_for, score_applicants)
 
-from lib import (DECISION_STYLE, L, P, api_key_available, decision_badge, explain_applicant, footer,  # noqa: E402
-                 load_applicants, load_audits, load_letters, load_model, money, path_for, score_applicants)
+page_setup("Applicant Review")
 
 _, meta, _ = load_model()
 scored = score_applicants()
@@ -20,7 +20,7 @@ def letter_key(sid: int, decision: str) -> str:
 
 scored["HAS_LETTER"] = [letter_key(s, d) in letters for s, d in zip(scored["SK_ID_CURR"], scored["DECISION"])]
 
-st.title("🧑 Applicant Review")
+st.title("Applicant Review")
 st.caption("The loan officer's view of one application: risk score, decision, the reasons behind it, and a drafted letter.")
 
 # ---------------------------------------------------------------- choose applicant
@@ -38,9 +38,9 @@ with st.sidebar:
     if pool.empty:
         st.warning("No applicants match. Turn off 'Only applicants with a drafted letter'.")
         st.stop()
-    labels = {int(r.SK_ID_CURR): f"#{int(r.SK_ID_CURR)} · risk {r.PD:.1%}{' · 📝' if r.HAS_LETTER else ''}" for r in pool.itertuples()}
+    labels = {int(r.SK_ID_CURR): f"#{int(r.SK_ID_CURR)} · risk {r.PD:.1%}{' · letter ready' if r.HAS_LETTER else ''}" for r in pool.itertuples()}
     sid = st.selectbox("Applicant", list(labels), format_func=labels.get)
-    st.caption(f"{len(pool)} applicants in this view. 📝 = letter already drafted.")
+    st.caption(f"{len(pool)} applicants in this view. *Letter ready* = letter already drafted.")
 
 row = scored.set_index("SK_ID_CURR").loc[sid]
 exp = explain_applicant(sid)
@@ -64,19 +64,19 @@ st.subheader("Why the model gave this score")
 left, right = st.columns([1, 1])
 with left:
     top = exp["all"].head(12).iloc[::-1]
-    names = [f"{'⚠️ ' if c == 'sensitive' else ''}{l} = {v}" for l, v, c in zip(top["label"], top["value"], top["category"])]
+    names = [f"{l} = {v}{' (sensitive)' if c == 'sensitive' else ''}" for l, v, c in zip(top["label"], top["value"], top["category"])]
     fig = go.Figure(go.Bar(x=top["shap"], y=names, orientation="h",
-                           marker_color=["#C44E52" if s > 0 else "#4C72B0" for s in top["shap"]]))
-    fig.add_vline(x=0, line_color="black")
-    fig.update_layout(height=460, margin=dict(t=10, l=10), xaxis_title="Push on risk (red = raises, blue = lowers)")
+                           marker_color=[BRAND["red"] if s > 0 else BRAND["teal"] for s in top["shap"]]))
+    fig.add_vline(x=0, line_color=BRAND["navy"])
+    fig.update_layout(height=460, margin=dict(t=10, l=10), xaxis_title="Red raises risk, teal lowers it")
     st.plotly_chart(fig, use_container_width=True)
     st.caption("Each bar is one factor's contribution to this applicant's score (SHAP). They add up exactly to the model's output. "
-               "⚠️ = sensitive characteristic: shown for transparency, never cited in letters or suggested as a change.")
+               "*(sensitive)* = sensitive characteristic: shown for transparency, never cited in letters or suggested as a change.")
 with right:
-    cat_icon = {"actionable": "🔧 loan term", "external score": "📈 external score", "credit history": "🗂️ history",
-                "profile": "👤 profile", "sensitive": "⚠️ sensitive"}
+    cat_label = {"actionable": "Loan term", "external score": "External score", "credit history": "Credit history",
+                 "profile": "Profile", "sensitive": "Sensitive"}
     def table(t):
-        return pd.DataFrame({"Factor": t["label"], "Value": t["value"], "Type": t["category"].map(cat_icon)})
+        return pd.DataFrame({"Factor": t["label"], "Value": t["value"], "Type": t["category"].map(cat_label)})
     cfg = {"Factor": st.column_config.TextColumn(width="medium"), "Value": st.column_config.TextColumn(width="small"),
            "Type": st.column_config.TextColumn(width="small")}
     st.markdown("**Raised risk most**")
@@ -95,10 +95,10 @@ def describe(o) -> str:
 
 
 if path is not None:
-    st.subheader("🛣️ Path to approval")
+    st.subheader("Path to approval")
     if path["status"] == "path":
         opts = [("Current loan", path["current"])]
-        for label, kind in [("⭐ Recommended", "recommended"), ("Borrow less only", "borrow_less"),
+        for label, kind in [("Recommended", "recommended"), ("Borrow less only", "borrow_less"),
                             ("Longer term only", "longer_term")]:
             o = path[kind]
             if o and not any(o["cut"] == x["cut"] and o["term_mult"] == x["term_mult"] for _, x in opts):
@@ -121,7 +121,7 @@ if path is not None:
                 "the cutoff. The risk comes mainly from the applicant's history, not the loan.")
 
 # ---------------------------------------------------------------- letter
-st.subheader("📝 Draft letter to the applicant")
+st.subheader("Draft letter to the applicant")
 apps = load_applicants().set_index("SK_ID_CURR")
 li = L.build_letter_input(sid, exp, apps.loc[sid], cutoff, path=path)
 key = letter_key(sid, decision)
@@ -145,7 +145,7 @@ if letter is None:
                     st.error(f"Could not draft the letter: {e}")
     else:
         st.info("Live drafting needs a Claude API key (add ANTHROPIC_API_KEY to the app's secrets). "
-                "Applicants marked 📝 have letters drafted in advance.")
+                "Applicants marked *letter ready* have letters drafted in advance.")
 
 if letter:
     lc, rc = st.columns([3, 1])
@@ -166,7 +166,7 @@ if letter:
 
     # ------------------------------------------------------------ independent audit
     audit = load_audits().get(key) or st.session_state.get(f"audit_{key}")
-    st.markdown("#### 🔍 Independent audit of this letter")
+    st.markdown("#### Independent audit of this letter")
     if audit is None:
         st.caption("No audit for this letter yet.")
     elif "error" in audit:
@@ -205,7 +205,7 @@ with d1:
                       index=0 if decision == "approve" else 3)
 with d2:
     note = st.text_area("Note for the file", placeholder="e.g. Late payments in the last year were during a job change; now employed 3 years.")
-if st.button("Record decision"):
+if st.button("Record decision", type="primary"):
     log.append({"Applicant": sid, "Model decision": DECISION_STYLE[decision][0], "PD": f"{exp['pd']:.1%}", "Officer decision": choice, "Note": note})
     st.success("Decision recorded for this session.")
 if log:

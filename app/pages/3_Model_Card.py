@@ -4,15 +4,15 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-st.set_page_config(page_title="Model Card · SecondLook", page_icon="📄", layout="wide")
+from lib import (BRAND, applicant_X, footer, label_of, load_applicants, load_audits, load_fairness, load_model, load_personas,
+                 page_setup)
 
-from lib import (applicant_X, footer, label_of, load_applicants, load_audits, load_fairness, load_model,  # noqa: E402
-                 load_personas)
+page_setup("Model Card")
 
 booster, meta, explainer = load_model()
 m = meta["metrics"]
 
-st.title("📄 Model Card")
+st.title("Model Card")
 st.caption("A model card summarises what a model is for, how it was built and tested, and where it should not be trusted.")
 
 st.subheader("Model details")
@@ -57,7 +57,7 @@ def shap_importance():
 
 
 imp = shap_importance()
-fig = px.bar(imp.iloc[::-1], x="Mean |SHAP|", y="Factor", orientation="h", color_discrete_sequence=["#55A868"])
+fig = px.bar(imp.iloc[::-1], x="Mean |SHAP|", y="Factor", orientation="h", color_discrete_sequence=[BRAND["teal"]])
 fig.update_layout(height=450, margin=dict(t=10))
 st.plotly_chart(fig, use_container_width=True)
 st.caption("Average size of each factor's push on the score, over the 300 applicants in this demo. "

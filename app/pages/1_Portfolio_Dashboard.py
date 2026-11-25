@@ -5,15 +5,15 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-st.set_page_config(page_title="Portfolio Dashboard · SecondLook", page_icon="📊", layout="wide")
+from lib import BRAND, CATEGORICAL, PE, M, approvals_at_rate, footer, load_model, load_personas, load_portfolio, page_setup
 
-from lib import PE, M, approvals_at_rate, footer, load_model, load_personas, load_portfolio  # noqa: E402
+page_setup("Portfolio Dashboard")
 
 _, meta, _ = load_model()
 df = load_portfolio()
 y, pd_hat, amount = df["TARGET"].values, df["PD_LGBM"].values, df["AMT_CREDIT"].values
 
-st.title("📊 Portfolio Dashboard")
+st.title("Portfolio Dashboard")
 st.caption(f"{len(df):,} held-out test applicants the model never saw during training. "
            "Move the cutoff to see how approvals, defaults and profit change.")
 
@@ -57,18 +57,18 @@ with tab_overview:
         st.subheader("Where applicants fall")
         plot = pd.DataFrame({"PD": np.clip(pd_hat, 0, 0.6), "Outcome": np.where(y == 1, "Defaulted", "Repaid")})
         fig = px.histogram(plot, x="PD", color="Outcome", nbins=60, barmode="stack",
-                           color_discrete_map={"Repaid": "#4C72B0", "Defaulted": "#C44E52"})
-        fig.add_vrect(x0=cutoff, x1=cutoff + 0.05, fillcolor="#E08E0B", opacity=0.18, line_width=0)
-        fig.add_vline(x=cutoff, line_dash="dash", line_color="black", annotation_text=f"cutoff {cutoff:.2f}", annotation_position="top right")
+                           color_discrete_map={"Repaid": BRAND["teal"], "Defaulted": BRAND["red"]})
+        fig.add_vrect(x0=cutoff, x1=cutoff + 0.05, fillcolor=BRAND["amber"], opacity=0.18, line_width=0)
+        fig.add_vline(x=cutoff, line_dash="dash", line_color=BRAND["navy"], annotation_text=f"cutoff {cutoff:.2f}", annotation_position="top right")
         fig.update_layout(xaxis_title="Predicted probability of default (capped at 0.6)", yaxis_title="Applicants", height=380, margin=dict(t=30))
         st.plotly_chart(fig, use_container_width=True)
         st.caption("Shaded band = under review (just above the cutoff). Most applicants have low predicted risk. Defaulters (red) cluster at higher PD, but plenty of repayers sit above the cutoff too.")
     with c2:
         st.subheader("Profit by cutoff")
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=curve["cutoff"], y=curve["profit"] / 1e9, name="SecondLook model", line=dict(color="#C44E52", width=3)))
-        fig.add_hline(y=profit_all / 1e9, line_dash="dot", line_color="grey", annotation_text="approve everyone", annotation_position="bottom right")
-        fig.add_vline(x=cutoff, line_dash="dash", line_color="black")
+        fig.add_trace(go.Scatter(x=curve["cutoff"], y=curve["profit"] / 1e9, name="SecondLook model", line=dict(color=BRAND["teal"], width=3)))
+        fig.add_hline(y=profit_all / 1e9, line_dash="dot", line_color=BRAND["slate_light"], annotation_text="approve everyone", annotation_position="bottom right")
+        fig.add_vline(x=cutoff, line_dash="dash", line_color=BRAND["navy"])
         fig.update_layout(xaxis_title="PD cutoff", yaxis_title="Profit on test set (billions)", height=380, margin=dict(t=30), showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
         st.caption("Profit peaks where the value of extra good loans is balanced by the cost of extra defaults.")
@@ -80,7 +80,7 @@ with tab_overview:
         dec = pd.qcut(pd_hat, 10, labels=[f"D{i}" for i in range(1, 11)])
         calib = pd.DataFrame({"Predicted": pd_hat, "Actual": y}).groupby(dec, observed=True).mean().mul(100).reset_index(names="Decile")
         fig = px.bar(calib.melt(id_vars="Decile", var_name="Series", value_name="Default rate (%)"), x="Decile", y="Default rate (%)",
-                     color="Series", barmode="group", color_discrete_map={"Predicted": "#DD8452", "Actual": "#4C72B0"})
+                     color="Series", barmode="group", color_discrete_map={"Predicted": BRAND["teal"], "Actual": BRAND["navy"]})
         fig.update_layout(height=360, margin=dict(t=30), xaxis_title="Risk decile (D1 = safest 10%)", legend_title_text="")
         st.plotly_chart(fig, use_container_width=True)
         st.caption("Predicted and actual default rates match in every decile: the probabilities are honest, not just well-ranked.")
@@ -93,7 +93,7 @@ with tab_overview:
                      {"Default rate allowed": f"{r:.0%}", "Policy": "SecondLook model", "Approvals": approvals_at_rate(y, pd_hat, r)}]
         gain = pd.DataFrame(rows)
         fig = px.bar(gain, x="Default rate allowed", y="Approvals", color="Policy", barmode="group",
-                     color_discrete_map={"External score only": "#8C8C8C", "SecondLook model": "#C44E52"})
+                     color_discrete_map={"External score only": BRAND["slate_light"], "SecondLook model": BRAND["teal"]})
         fig.update_layout(height=360, margin=dict(t=30), legend_title_text="")
         fig.update_xaxes(type="category")
         st.plotly_chart(fig, use_container_width=True)
@@ -128,7 +128,7 @@ with tab_personas:
     p3.metric("Have a path to approval", f"{pers['has_path'].mean():.0%}", help="A smaller loan or more payments that the model would approve (Step 8)")
     m1, m2 = st.columns([3, 2])
     with m1:
-        fig = px.scatter(pers.sample(frac=1, random_state=42), x="PC1", y="PC2", color="persona", category_orders={"persona": list(prof.index)},
+        fig = px.scatter(pers.sample(frac=1, random_state=42), x="PC1", y="PC2", color="persona", category_orders={"persona": list(prof.index)}, color_discrete_sequence=CATEGORICAL,
                          opacity=0.55, render_mode="webgl", hover_data={"PC1": False, "PC2": False, "PD": ":.1%"})
         fig.update_traces(marker_size=4)
         lo, hi = pers[["PC1", "PC2"]].quantile(0.005), pers[["PC1", "PC2"]].quantile(0.995)

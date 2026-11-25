@@ -3,10 +3,11 @@ import json
 
 import streamlit as st
 
-st.set_page_config(page_title="AI Analyst · SecondLook", page_icon="💬", layout="wide")
+from lib import STATIC, api_key_available, footer, load_applicants, load_model, page_setup
+from secondlook import agent as A
 
-from lib import api_key_available, footer, load_applicants, load_model  # noqa: E402
-from secondlook import agent as A  # noqa: E402
+page_setup("AI Analyst")
+AVATAR = {"assistant": str(STATIC / "logo_icon.png"), "user": ":material/person:"}
 
 MAX_QUESTIONS = 10                 # per session, to protect the public API key
 MAX_OFF_TOPIC = 2                  # unrelated messages allowed (with a warning); the next one closes the chat
@@ -32,7 +33,7 @@ def show_work(r: dict):
     n = len(r["steps"])
     with st.expander(f"How this was answered: {n} tool call{'s' if n != 1 else ''} · ${r['cost_usd']:.4f}"):
         for i, s in enumerate(r["steps"], 1):
-            flag = " ⚠️ error, sent back to Claude" if s["is_error"] else ""
+            flag = " :red[error, sent back to Claude]" if s["is_error"] else ""
             st.markdown(f"**{i}. `{s['tool']}`**{flag}")
             if s["tool"] == "run_sql":
                 st.code(s["input"]["query"], language="sql")
@@ -44,7 +45,7 @@ def show_work(r: dict):
                    f"{r['input_tokens']:,} input + {r['output_tokens']:,} output tokens · ${r['cost_usd']:.4f} · {r['seconds']}s")
 
 
-st.title("💬 AI Analyst")
+st.title("AI Analyst")
 st.caption("Ask a question about the test portfolio, the borrower personas or the fairness audit. Claude writes SQL on a "
            "read-only copy of the data and calls SecondLook's own tools (SHAP reasons, path to approval, fairness audit). "
            "Every answer shows the exact queries and tool calls behind it, and what it cost.")
@@ -72,7 +73,7 @@ with st.sidebar:
                     "- 300 demo applicants can be explained one by one")
 
 for m in chat:
-    with st.chat_message(m["role"]):
+    with st.chat_message(m["role"], avatar=AVATAR[m["role"]]):
         st.markdown(m["content"])
         if m.get("result"):
             show_work(m["result"])
@@ -117,9 +118,9 @@ if question:
                     {"role": "assistant", "content": A.history_message(a["content"], a["result"]["steps"])}]
     chat.append({"role": "user", "content": question})
     st.session_state["analyst_asked"] = asked + 1
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar=AVATAR["user"]):
         st.markdown(question)
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar=AVATAR["assistant"]):
         with st.spinner("Querying the portfolio..."):
             from secondlook.letters import _client
             try:
