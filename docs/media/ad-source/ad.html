@@ -1,0 +1,378 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>SecondLook ad</title>
+<style>
+@font-face{font-family:Montserrat;src:url(montserrat.woff2) format('woff2');font-weight:600 700;}
+@font-face{font-family:Inter;src:url(inter.woff2) format('woff2');font-weight:400 700;}
+:root{--navy:#0A2E52;--navy-deep:#061C33;--teal:#21A6B8;--teal-dark:#1A8A99;--surface:#F4F7F9;--border:#E2E8F0;
+--slate:#64748B;--text:#1E293B;--red:#EF4444;--amber:#F59E0B;--green:#10B981;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--navy)}
+body{font-family:Inter,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden}
+.abs{position:absolute}
+.layer{position:absolute;inset:0}
+.mont{font-family:Montserrat,sans-serif;font-weight:700}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px}
+.badge{display:inline-block;padding:6px 18px;border-radius:999px;font-weight:600;font-size:22px;letter-spacing:.02em}
+.b-review{color:#B45309;background:rgba(245,158,11,.14);border:1px solid #B4530933}
+.b-approve{color:#047857;background:rgba(16,185,129,.12);border:1px solid #04785733}
+.b-decline{color:#B91C1C;background:rgba(239,68,68,.12);border:1px solid #B91C1C33}
+.eyebrow{font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--slate)}
+.metric{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px}
+.metric .v{font-size:44px;font-weight:600;color:var(--navy);font-variant-numeric:tabular-nums;margin-top:8px}
+/* dark world */
+#dark{background:radial-gradient(1200px 800px at 30% 20%, #134170 0%, var(--navy) 45%, var(--navy-deep) 100%)}
+#grid{opacity:.10;background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px);background-size:80px 80px}
+/* light world */
+#light{background:linear-gradient(160deg,#FFFFFF 0%,var(--surface) 60%,#E8F4F6 100%)}
+.blob{position:absolute;border-radius:50%;filter:blur(80px)}
+/* app window */
+.win{position:absolute;background:#fff;border-radius:16px;border:1px solid var(--border);
+ box-shadow:0 40px 80px -20px rgba(10,46,82,.28),0 12px 24px -8px rgba(10,46,82,.12);overflow:hidden}
+.winbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px}
+.dot{width:12px;height:12px;border-radius:50%;background:#CBD5E1}
+.url{margin-left:18px;background:#fff;border:1px solid var(--border);border-radius:8px;height:32px;display:flex;align-items:center;gap:8px;padding:0 14px;font-size:15px;color:var(--slate)}
+.url img{height:18px}
+.winbody{padding:34px 40px}
+h3.app{font-family:Montserrat;font-weight:600;color:var(--navy);font-size:34px}
+/* captions */
+.cap{position:absolute;left:120px;width:560px}
+.cap .num{font-family:Montserrat;font-weight:700;color:var(--teal);font-size:22px;letter-spacing:.08em}
+.cap .h{font-family:Montserrat;font-weight:700;color:var(--navy);font-size:64px;line-height:1.08;margin-top:16px;letter-spacing:-.01em}
+.cap .bar{width:72px;height:6px;border-radius:3px;background:var(--teal);margin-top:28px}
+/* table */
+table.t{border-collapse:collapse;width:100%;font-size:21px;font-variant-numeric:tabular-nums}
+table.t th{font-weight:500;color:var(--slate);text-align:left;background:var(--surface);padding:14px 16px;border:1px solid var(--border);font-size:18px}
+table.t td{padding:16px 16px;border:1px solid var(--border);color:var(--text)}
+#cursor{position:absolute;width:44px;height:44px;z-index:50;filter:drop-shadow(0 6px 10px rgba(10,46,82,.35))}
+.radio{display:flex;align-items:center;gap:16px;font-size:28px;color:var(--text);margin:16px 0}
+.radio i{width:28px;height:28px;border-radius:50%;border:2px solid #94A3B8;display:inline-block;position:relative;background:#fff}
+.radio i.on{border-color:var(--teal);background:var(--teal)}
+.radio i.on::after{content:'';position:absolute;inset:8px;border-radius:50%;background:#fff}
+.btn{display:inline-block;background:var(--teal);color:#fff;border-radius:8px;padding:16px 28px;font-size:26px;font-weight:500;box-shadow:0 4px 12px rgba(33,166,184,.25)}
+</style></head>
+<body><div id="stage">
+
+<!-- ================= DARK WORLD (scenes 1-2) ================= -->
+<div id="dark" class="layer">
+ <div id="grid" class="layer"></div>
+ <!-- scene 1: application card + stamp -->
+ <div id="s1" class="layer">
+  <div id="appcard" class="abs card" style="left:560px;top:250px;width:800px;padding:40px 48px;border-radius:16px;box-shadow:0 40px 80px rgba(0,0,0,.35)">
+   <div class="eyebrow">Loan application</div>
+   <div class="mont" style="font-size:40px;color:var(--navy);margin-top:10px">Applicant #135305</div>
+   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:30px">
+    <div class="metric" style="padding:16px 18px"><div class="eyebrow" style="font-size:13px">Loan amount</div><div class="v" style="font-size:34px">565,380</div></div>
+    <div class="metric" style="padding:16px 18px"><div class="eyebrow" style="font-size:13px">Regular payment</div><div class="v" style="font-size:34px">30,798</div></div>
+    <div class="metric" style="padding:16px 18px"><div class="eyebrow" style="font-size:13px">Payments</div><div class="v" style="font-size:34px">18</div></div>
+   </div>
+   <div style="margin-top:26px;height:14px;border-radius:7px;background:var(--surface);width:90%"></div>
+   <div style="margin-top:12px;height:14px;border-radius:7px;background:var(--surface);width:70%"></div>
+   <div id="stamp" class="abs mont" style="left:330px;top:120px;border:8px solid var(--red);color:var(--red);font-size:92px;letter-spacing:.08em;padding:6px 34px;border-radius:14px;background:rgba(255,255,255,.88)">DECLINED</div>
+  </div>
+  <div id="t-declined" class="abs mont" style="left:0;width:1920px;text-align:center;top:800px;color:#fff;font-size:84px">Declined.</div>
+ </div>
+ <!-- scene 2: kinetic type + 71% -->
+ <div id="s2" class="layer">
+  <div id="k1" class="abs mont" style="left:160px;top:250px;color:#fff;font-size:110px">Thin file.</div>
+  <div id="k2" class="abs mont" style="left:160px;top:420px;color:#fff;font-size:110px">Close call.</div>
+  <div id="k3" class="abs mont" style="left:160px;top:590px;color:var(--teal);font-size:110px">No explanation.</div>
+  <div id="stat" class="abs" style="left:0;top:0;width:1920px;height:1080px">
+   <div class="abs" style="left:0;width:1920px;top:230px;text-align:center">
+    <div class="eyebrow" style="color:#9FB3C8;font-size:24px">Not approved, but would repay</div>
+    <div id="pct" class="mont" style="font-size:300px;line-height:1;color:#fff;margin-top:24px;font-variant-numeric:tabular-nums">71%</div>
+    <div class="mont" style="font-size:60px;color:var(--teal);margin-top:20px">would have repaid<span style="color:#fff">*</span></div>
+   </div>
+   <div id="foot" class="abs" style="left:0;width:1920px;text-align:center;top:968px;color:#9FB3C8;font-size:22px">*Of applicants not approved, in 61,503 historical test cases.</div>
+  </div>
+ </div>
+</div>
+
+<!-- ================= LIGHT WORLD (scenes 3-9) ================= -->
+<div id="light" class="layer">
+ <div class="blob" id="blob1" style="width:700px;height:700px;left:-200px;top:-250px;background:rgba(33,166,184,.18)"></div>
+ <div class="blob" id="blob2" style="width:800px;height:800px;right:-260px;bottom:-320px;background:rgba(10,46,82,.10)"></div>
+
+ <!-- scene 3: logo reveal -->
+ <div id="s3" class="layer">
+  <img id="logo3" src="logo_full.png" class="abs" style="left:675px;top:210px;width:570px">
+  <div id="pill3" class="abs" style="left:0;width:1920px;top:660px;text-align:center">
+   <span id="pill3in" style="display:inline-block;padding:20px 40px;border-radius:999px;background:#fff;border:2px solid var(--teal);color:var(--navy);font-size:32px;font-weight:600">An AI-assisted second review for borderline loan declines</span>
+  </div>
+ </div>
+
+ <!-- scene 4: flags -->
+ <div id="s4" class="layer">
+  <div class="cap" style="top:390px"><div class="num">01 · FLAG</div><div class="h">Flags borderline declines</div><div class="bar"></div></div>
+  <div id="w4" class="win" style="left:760px;top:250px;width:1060px">
+   <div class="winbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url"><img src="logo_icon.png">secondlook.streamlit.app · Applicant Review</span></div>
+   <div class="winbody">
+    <div style="display:flex;align-items:center;gap:20px"><h3 class="app">Applicant #135305</h3><span id="badge4" class="badge b-review">Under review</span></div>
+    <div style="display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:18px;margin-top:28px">
+     <div class="metric" id="pdtile"><div class="eyebrow">Predicted risk (PD)</div><div class="v" id="pdv">18.1%</div>
+      <div id="pddelta" style="display:inline-block;margin-top:10px;padding:4px 12px;border-radius:999px;background:rgba(239,68,68,.12);color:#DC2626;font-size:19px;font-weight:500">&#8593; +1.1 pts vs cutoff 17%</div></div>
+     <div class="metric"><div class="eyebrow">Loan amount</div><div class="v">565,380</div></div>
+     <div class="metric"><div class="eyebrow">Regular payment</div><div class="v">30,798</div></div>
+    </div>
+    <!-- risk gauge -->
+    <div style="margin-top:34px;position:relative;height:90px">
+     <div class="eyebrow" style="font-size:14px">Risk vs cutoff</div>
+     <div style="position:absolute;top:40px;left:0;right:0;height:16px;border-radius:8px;background:linear-gradient(90deg,rgba(16,185,129,.35) 0%,rgba(16,185,129,.35) 56.7%,rgba(245,158,11,.4) 56.7%,rgba(245,158,11,.4) 73.3%,rgba(239,68,68,.35) 73.3%)"></div>
+     <div style="position:absolute;top:28px;left:56.7%;width:3px;height:40px;background:var(--navy)"></div>
+     <div style="position:absolute;top:72px;left:56.7%;transform:translateX(-50%);font-size:15px;color:var(--navy);font-weight:600">cutoff 17%</div>
+     <div id="needle" style="position:absolute;top:30px;left:0;width:36px;height:36px;margin-left:-18px;border-radius:50%;background:#fff;border:5px solid #B45309;box-shadow:0 4px 10px rgba(10,46,82,.25)"></div>
+    </div>
+    <div style="margin-top:14px;background:#FEF9E7;border-radius:8px;padding:16px 20px;color:#92400E;font-size:19px"><b>Borderline:</b> risk is within 5 points above the 17% cutoff.</div>
+   </div>
+  </div>
+ </div>
+
+ <!-- scene 5: SHAP -->
+ <div id="s5" class="layer">
+  <div class="cap" style="top:390px"><div class="num">02 · EXPLAIN</div><div class="h">Explains every score</div><div class="bar"></div></div>
+  <div id="w5" class="win" style="left:760px;top:140px;width:1060px">
+   <div class="winbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url"><img src="logo_icon.png">secondlook.streamlit.app · Applicant Review</span></div>
+   <div class="winbody" style="padding-bottom:26px">
+    <h3 class="app" style="font-size:30px">Why the model gave this score</h3>
+    <div id="shap" style="position:relative;height:610px;margin-top:20px"></div>
+    <div style="text-align:center;color:var(--slate);font-size:18px;margin-top:2px"><span style="color:var(--red);font-weight:600">Red raises risk</span>, <span style="color:var(--teal-dark);font-weight:600">teal lowers it</span></div>
+   </div>
+  </div>
+ </div>
+
+ <!-- scene 6: path to approval -->
+ <div id="s6" class="layer">
+  <div class="cap" style="top:390px"><div class="num">03 · OFFER</div><div class="h">Finds a path to approval</div><div class="bar"></div></div>
+  <div id="w6" class="win" style="left:760px;top:290px;width:1060px">
+   <div class="winbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url"><img src="logo_icon.png">secondlook.streamlit.app · Applicant Review</span></div>
+   <div class="winbody">
+    <h3 class="app" style="font-size:30px">Path to approval</h3>
+    <table class="t" style="margin-top:22px">
+     <tr><th>Option</th><th>Change</th><th>Loan amount</th><th>Payments</th><th>Risk</th><th>Decision</th></tr>
+     <tr><td>Current loan</td><td>none</td><td>565,380</td><td>18</td><td>18.1%</td><td><span class="badge b-review" style="font-size:17px;padding:4px 12px">Under review</span></td></tr>
+     <tr id="recrow"><td><b>Recommended</b></td><td>10% less</td><td>508,842</td><td>18</td><td>16.2%</td><td style="position:relative;width:190px"><span id="rec-old" class="badge b-review" style="font-size:17px;padding:4px 12px;position:absolute;left:16px;top:14px">Under review</span><span id="rec-new" class="badge b-approve" style="font-size:17px;padding:4px 12px;position:absolute;left:16px;top:14px">Approve</span></td></tr>
+     <tr><td>Longer term only</td><td>20% more payments</td><td>565,380</td><td>22</td><td>13.2%</td><td><span class="badge b-approve" style="font-size:17px;padding:4px 12px">Approve</span></td></tr>
+    </table>
+    <div style="margin-top:18px;color:var(--slate);font-size:17px">Each option is re-scored by the same model. Recommended = the smallest change.</div>
+   </div>
+  </div>
+ </div>
+
+ <!-- scene 7: letter + audit -->
+ <div id="s7" class="layer">
+  <div class="cap" style="top:360px;width:560px"><div class="num">04 · COMMUNICATE</div><div class="h" style="font-size:58px">Drafts a clear letter. Checks it against the model.</div><div class="bar"></div></div>
+  <div id="w7" class="win" style="left:760px;top:170px;width:1060px">
+   <div class="winbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url"><img src="logo_icon.png">secondlook.streamlit.app · Applicant Review</span></div>
+   <div class="winbody" style="display:grid;grid-template-columns:1.55fr 1fr;gap:28px">
+    <div>
+     <h3 class="app" style="font-size:28px">Draft letter to the applicant</h3>
+     <div style="margin-top:14px;font-size:18px"><b>Subject:</b> Update on your loan application</div>
+     <div id="letter" style="margin-top:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px 22px;height:520px;font-size:19px;line-height:1.55;white-space:pre-wrap;overflow:hidden"></div>
+    </div>
+    <div style="padding-top:58px">
+     <div id="chk1" style="background:rgba(16,185,129,.12);border-radius:8px;padding:18px 18px;color:#047857;font-size:21px;font-weight:600;display:flex;gap:12px;align-items:center">
+      <svg width="34" height="34" viewBox="0 0 34 34"><circle cx="17" cy="17" r="17" fill="#10B981"/><path d="M9 17.5l5 5 11-11" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>All guardrail checks passed</div>
+     <div id="chk2" class="metric" style="margin-top:20px">
+      <div class="eyebrow">Claims supported</div>
+      <div style="display:flex;align-items:center;gap:14px"><div class="v">7 of 7</div>
+      <svg width="40" height="40" viewBox="0 0 34 34" style="margin-top:8px"><circle cx="17" cy="17" r="17" fill="#10B981"/><path d="M9 17.5l5 5 11-11" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div style="color:var(--slate);font-size:16px;margin-top:6px">Independent audit: every claim matches the model's reasons.</div>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <!-- scene 8: officer decision -->
+ <div id="s8" class="layer">
+  <div class="cap" style="top:420px"><div class="num">YOU DECIDE</div><div class="h">You make the call.</div><div class="bar"></div></div>
+  <div id="w8" class="win" style="left:760px;top:300px;width:1060px">
+   <div class="winbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url"><img src="logo_icon.png">secondlook.streamlit.app · Applicant Review</span></div>
+   <div class="winbody">
+    <h3 class="app" style="font-size:30px">Loan officer decision</h3>
+    <div style="font-size:18px;color:var(--text);margin-top:18px">Your decision</div>
+    <div class="radio"><i></i>Approve</div>
+    <div class="radio"><i id="r2"></i>Approve with adjusted terms</div>
+    <div class="radio"><i></i>Decline</div>
+    <div class="radio"><i id="r4"></i>Request more information</div>
+    <div id="recbtn" class="btn" style="margin-top:16px">Record decision</div>
+   </div>
+  </div>
+  <div id="bigcheck" class="abs" style="left:0;top:0;width:1920px;height:1080px;display:flex;align-items:center;justify-content:center">
+   <div id="bigcircle" style="width:520px;height:520px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;box-shadow:0 40px 100px rgba(16,185,129,.4)">
+    <svg width="300" height="300" viewBox="0 0 100 100"><path id="ckpath" d="M24 52 L42 70 L77 33" stroke="#fff" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="90" stroke-dashoffset="90"/></svg>
+   </div>
+  </div>
+  <div id="decided" class="abs mont" style="left:0;width:1920px;text-align:center;top:880px;color:var(--navy);font-size:44px">Approved with adjusted terms</div>
+ </div>
+
+ <!-- scene 9: end card -->
+ <div id="s9" class="layer">
+  <img id="logo9" src="logo_full.png" class="abs" style="left:735px;top:150px;width:450px">
+  <div id="line9" class="abs mont" style="left:0;width:1920px;text-align:center;top:640px;color:var(--navy);font-size:66px;letter-spacing:-.01em">Give good borrowers a second look.</div>
+  <div id="url9" class="abs" style="left:0;width:1920px;text-align:center;top:790px">
+   <span style="display:inline-block;background:var(--navy);color:#fff;border-radius:999px;padding:20px 48px;font-size:34px;font-weight:600;letter-spacing:.01em">secondlook.streamlit.app</span></div>
+ </div>
+</div>
+
+<!-- teal light sweep -->
+<div id="sweep" class="layer" style="pointer-events:none"></div>
+
+<svg id="cursor" viewBox="0 0 24 24"><path d="M4 2.5 L4 19.5 L8.6 15.4 L11.6 22 L14.6 20.7 L11.7 14.2 L18 14.2 Z" fill="#0A2E52" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+<div id="click" class="abs" style="width:70px;height:70px;border-radius:50%;border:4px solid var(--teal);z-index:49"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const P=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=p=>1-Math.pow(1-p,3);                 // ease out cubic
+const eio=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+const back=p=>{const c=1.70158,c3=c+1;return 1+c3*Math.pow(p-1,3)+c*Math.pow(p-1,2)};
+const lerp=(a,b,p)=>a+(b-a)*p;
+function set(id,o,tr){const e=typeof id==='string'?$(id):id;e.style.opacity=o;if(tr!==undefined)e.style.transform=tr;}
+
+// ---- SHAP bars (real values for applicant #135305) ----
+const SHAP=[["Average external credit score = 0.24",0.679],["Age of the car the applicant already owns = 4 years old",-0.191],
+["Loan amount vs price of goods = 1.34x",0.182],["Highest external credit score = 0.27",0.156],["Loan term (number of payments) = about 18 payments",0.155],
+["Average term of past loans = about 9 payments",-0.144],["Regular repayment amount = 30,798",0.111],["Share of payments late in the last year = 0%",-0.098],
+["Lowest external credit score = 0.19",0.095],["Debt vs credit limit at other lenders = 12%",-0.084],["External credit score 2 = 0.25",0.083],["Region rating (with city) = 3",0.081]];
+const shapEl=$('shap');const ZERO=560,SCALE=560/0.75,ROWH=50;
+let axis=document.createElement('div');axis.style.cssText=`position:absolute;left:${ZERO}px;top:0;width:2px;height:${SHAP.length*ROWH}px;background:#0A2E52`;shapEl.appendChild(axis);
+const bars=SHAP.map(([lab,v],i)=>{const l=document.createElement('div');l.textContent=lab;
+ l.style.cssText=`position:absolute;right:${980-ZERO+ (v<0? Math.abs(v)*SCALE+14:14)}px;top:${i*ROWH+12}px;font-size:16px;color:#64748B;white-space:nowrap;text-align:right`;
+ const b=document.createElement('div');b.style.cssText=`position:absolute;top:${i*ROWH+8}px;height:34px;border-radius:3px;background:${v>0?'#EF4444':'#21A6B8'}`;
+ shapEl.appendChild(l);shapEl.appendChild(b);return {l,b,v};});
+shapEl.style.width='980px';
+
+// ---- letter text (real pre-drafted letter, first part) ----
+const LETTER="Thank you for applying with us. Your application is not approved yet, and it is now under review. Because your application is close to our approval range, a loan officer will look at it personally.\n\nWhen reviewing applications, we look at several factors. Your external credit scores are around 0.24 on average and 0.27 at the highest. The requested loan amount is 1.34 times the price of the goods it is meant to cover.\n\nThere are also strengths in your application. Your car is 4 years old, and 0% of your payments were late in the last year.\n\nA loan officer may be able to offer a loan of 508,842 with regular payments of about 27,718 over about 18 payments.";
+
+// ---- cursor path keyframes [t,x,y] ----
+const CUR=[[17.6,1900,1100],[18.6,1173,598],[19.0,1173,598],[19.5,1330,700],[21.0,1560,1000],
+           [24.6,1560,1000],[25.25,819,546],[25.6,819,546],[25.95,927,727],[26.4,927,727]];
+function curPos(t){if(t<=CUR[0][0])return CUR[0];for(let i=1;i<CUR.length;i++){if(t<=CUR[i][0]){const a=CUR[i-1],b=CUR[i];const p=eio(P(t,a[0],b[0]));return [t,lerp(a[1],b[1],p),lerp(a[2],b[2],p)];}}return CUR[CUR.length-1];}
+const CLICKS=[19.0,25.6,26.15];
+
+// window entry/exit helper: in at a, out at b (seconds)
+function win(id,capSel,t,a,b,tilt){
+ const pin=eo(P(t,a,a+0.55)), pout=eio(P(t,b-0.35,b));
+ const f=Math.sin((t-a)*1.4)*8;                   // gentle float
+ const x=lerp(260,0,pin)+lerp(0,-180,pout);
+ const ry=tilt[0]+Math.sin((t-a)*0.9)*1.2, rx=tilt[1];
+ set(id,pin*(1-pout),`perspective(2200px) translate(${x}px,${f}px) rotateY(${ry}deg) rotateX(${rx}deg) scale(${lerp(.94,1,pin)})`);
+ const cap=$(id).parentElement.querySelector('.cap');
+ const cin=eo(P(t,a+0.1,a+0.6));
+ set(cap,cin*(1-pout),`translateY(${lerp(40,0,cin)}px)`);
+}
+
+function render(t){
+ // ===== worlds =====
+ const sweepP=P(t,6.85,7.65);
+ $('dark').style.display=t<7.6?'block':'none';
+ $('light').style.opacity=t<7.15?0:1;
+ // sweep: diagonal teal band crossing the frame, reveals light world behind
+ if(t>6.8&&t<7.9){const x=lerp(-1400,2600,eio(sweepP));
+  $('sweep').style.opacity=1-P(t,7.55,7.9);
+  $('sweep').style.background=`linear-gradient(110deg, transparent ${x-700}px, rgba(33,166,184,.0) ${x-520}px, rgba(33,166,184,.55) ${x-200}px, rgba(255,255,255,.95) ${x}px, rgba(33,166,184,.5) ${x+160}px, transparent ${x+420}px)`;
+ } else $('sweep').style.opacity=0;
+ // light world clip revealed behind sweep
+ if(t>=6.85&&t<7.65){const x=lerp(-1400,2600,eio(sweepP));$('light').style.opacity=1;$('light').style.clipPath=`polygon(0 0, ${x+200}px 0, ${x-200}px 1080px, 0 1080px)`;}
+ else $('light').style.clipPath='none';
+ $('grid').style.transform=`translateY(${-t*12}px)`;
+ $('blob1').style.transform=`translate(${Math.sin(t*.4)*60}px,${Math.cos(t*.3)*40}px)`;
+ $('blob2').style.transform=`translate(${Math.cos(t*.35)*60}px,${Math.sin(t*.45)*40}px)`;
+
+ // ===== S1 0-3 =====
+ const s1in=eo(P(t,0.15,0.85)), s1out=eio(P(t,2.75,3.1));
+ set('s1',1-s1out);
+ set('appcard',s1in,`translate(${lerp(-900,0,s1in)}px,0) rotate(${lerp(-6,-1.5,s1in)}deg)`);
+ const sp=P(t,1.2,1.45);
+ const shake=t>1.45&&t<1.75?Math.sin((t-1.45)*90)*10*(1-P(t,1.45,1.75)):0;
+ set('stamp',sp>0?1:0,`rotate(-14deg) scale(${lerp(2.6,1,eo(sp))})`);
+ $('appcard').style.marginLeft=shake+'px';
+ const dt=eo(P(t,1.6,2.1));set('t-declined',dt,`translateY(${lerp(30,0,dt)}px)`);
+
+ // ===== S2 3-7 =====
+ set('s2',t>2.95&&t<7.7?1:0);
+ [['k1',3.05],['k2',3.55],['k3',4.05]].forEach(([id,a])=>{const pi=eo(P(t,a,a+0.4)),po=eio(P(t,4.75,5.1));
+  set(id,pi*(1-po),`translateX(${lerp(1200,0,pi)+lerp(0,-1400,po)+ (t-a)*-18}px) skewX(${lerp(-12,0,pi)}deg)`);});
+ const st=eo(P(t,5.05,5.4));
+ set('stat',st,`scale(${lerp(.9,1,st)})`);
+ const cnt=Math.round(71*eo(P(t,5.15,6.3)));$('pct').textContent=cnt+'%';
+ set('foot',P(t,5.5,5.9));
+
+ // ===== S3 7-9 =====
+ const lg=eo(P(t,7.35,8.05)), s3out=eio(P(t,8.75,9.05));
+ set('s3',(t<9.1?1:0)*(1-s3out),`scale(${lerp(1,1.06,s3out)})`);
+ set('logo3',lg,`translateY(${lerp(30,0,lg)}px) scale(${lerp(.86,1,lg)})`);
+ const pl=eo(P(t,7.85,8.35));
+ set('pill3',pl,`translateY(${lerp(24,0,pl)}px)`);
+ const glow=0.35+0.25*Math.sin((t-7.9)*5);
+ $('pill3in').style.boxShadow=`0 0 ${30+20*glow}px rgba(33,166,184,${glow}), 0 10px 30px rgba(10,46,82,.10)`;
+
+ // ===== S4 9-13 =====
+ $('s4').style.display=t>8.9&&t<13.2?'block':'none';
+ if(t>8.9&&t<13.2){ win('w4',null,t,9.0,13.05,[-10,4]);
+  const bp=P(t,9.55,9.85); set('badge4',bp>0?1:0,`scale(${bp>0?back(bp):0})`);
+  const pc=eo(P(t,9.8,11.2)); const pd=lerp(4.0,18.1,pc);
+  $('pdv').textContent=pd.toFixed(1)+'%';
+  $('needle').style.left=(clamp(pd/30)*100)+'%';
+  $('needle').style.borderColor=pd<17?'#10B981':'#B45309';
+  const dl=eo(P(t,11.1,11.45)); set('pddelta',dl,`translateY(${lerp(10,0,dl)}px)`);
+  const pt=P(t,11.15,11.6); $('pdtile').style.boxShadow=`0 0 0 ${3*Math.sin(pt*Math.PI)*1.5}px rgba(245,158,11,.5)`; }
+
+ // ===== S5 13-17 =====
+ $('s5').style.display=t>12.9&&t<17.2?'block':'none';
+ if(t>12.9&&t<17.2){ win('w5',null,t,13.0,17.05,[-9,3]);
+  bars.forEach((o,i)=>{const a=13.55+i*0.17;const p=eo(P(t,a,a+0.45));const w=Math.abs(o.v)*SCALE*p;
+   o.b.style.width=w+'px';o.b.style.left=(o.v>0?ZERO+1:ZERO-w)+'px';o.l.style.opacity=P(t,a-0.05,a+0.25);});}
+
+ // ===== S6 17-21 =====
+ $('s6').style.display=t>16.9&&t<21.2?'block':'none';
+ if(t>16.9&&t<21.2){ win('w6',null,t,17.0,21.05,[-8,3]);
+  const hl=P(t,18.95,19.2);$('recrow').style.background=`rgba(33,166,184,${0.13*hl})`;
+  $('recrow').style.outline=hl>0?`3px solid rgba(33,166,184,${hl})`:'none';
+  const fl=P(t,19.25,19.55); set('rec-old',1-fl,`rotateX(${fl*90}deg)`); set('rec-new',fl,`rotateX(${(1-fl)*-90}deg) scale(${fl>0?back(fl):1})`); }
+
+ // ===== S7 21-25 =====
+ $('s7').style.display=t>20.9&&t<25.2?'block':'none';
+ if(t>20.9&&t<25.2){ win('w7',null,t,21.0,25.05,[-7,2]);
+  const n=Math.floor(LETTER.length*P(t,21.45,23.6));$('letter').textContent=LETTER.slice(0,n)+(t<23.6&&Math.floor(t*4)%2?'|':'');
+  const c1=P(t,23.0,23.3),c2=P(t,23.55,23.85);
+  set('chk1',c1>0?1:0,`scale(${c1>0?back(c1):0})`); set('chk2',c2>0?1:0,`scale(${c2>0?back(c2):0})`); }
+
+ // ===== S8 25-27 =====
+ $('s8').style.display=t>24.9&&t<27.25?'block':'none';
+ if(t>24.9&&t<27.25){ const bc=P(t,26.25,26.6), bcOut=eio(P(t,26.95,27.2));
+  win('w8',null,t,25.0,27.6,[-6,2]);
+  $('w8').style.opacity=parseFloat($('w8').style.opacity)*(1-P(t,26.2,26.45));
+  const cap=$('s8').querySelector('.cap');cap.style.opacity=parseFloat(cap.style.opacity)*(1-P(t,26.2,26.45));
+  $('r2').className=t>=25.6?'on':''; $('r4').className=t>=25.6?'':'on';
+  $('recbtn').style.transform=`scale(${t>26.15&&t<26.3?0.94:1})`;
+  $('recbtn').style.background=t>26.15&&t<26.3?'#1A8A99':'';
+  set('bigcheck',(bc>0?1:0)*(1-bcOut)); $('bigcircle').style.transform=`scale(${bc>0?back(bc):0})`;
+  $('ckpath').setAttribute('stroke-dashoffset',90*(1-eo(P(t,26.45,26.8))));
+  const dd=eo(P(t,26.55,26.85)); set('decided',dd*(1-bcOut),`translateY(${lerp(20,0,dd)}px)`); }
+
+ // ===== S9 27-30 =====
+ const e9=t>27.05;$('s9').style.display=e9?'block':'none';
+ if(e9){ const l9=eo(P(t,27.1,27.7)),t9=eo(P(t,27.45,28.0)),u9=eo(P(t,27.8,28.3));
+  set('logo9',l9,`translateY(${lerp(30,0,l9)}px) scale(${lerp(.9,1,l9)})`);
+  set('line9',t9,`translateY(${lerp(30,0,t9)}px)`);
+  set('url9',u9,`translateY(${lerp(24,0,u9)}px) scale(${lerp(.92,1,u9)})`); }
+
+ // ===== cursor =====
+ const cv=t>17.6&&t<26.5;const [,cx,cy]=curPos(t);
+ $('cursor').style.opacity=cv?(1-P(t,26.3,26.5))*(1-P(t,20.7,21.0)+P(t,24.5,24.8)):0;$('cursor').style.left=cx+'px';$('cursor').style.top=cy+'px';
+ let ck=0,cxp=0,cyp=0;CLICKS.forEach(c=>{if(t>=c&&t<c+0.4){ck=P(t,c,c+0.4);const q=curPos(c);cxp=q[1];cyp=q[2];}});
+ $('click').style.opacity=ck>0?(1-ck):0;$('click').style.left=(cxp+7-35)+'px';$('click').style.top=(cyp+5-35)+'px';
+ $('click').style.transform=`scale(${0.3+ck*1.1})`;
+ $('cursor').style.transform=CLICKS.some(c=>t>=c&&t<c+0.12)?'scale(.85)':'scale(1)';
+
+ // global fade in/out
+ document.getElementById('stage').style.opacity=P(t,0,0.25);
+}
+window.render=render;render(0);
+</script>
+</body></html>

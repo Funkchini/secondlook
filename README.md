@@ -6,6 +6,12 @@ A Group 3 Capstone Project for Uplift Code Camp, Python for Data and AI (Batch 3
 
 **Live app:** [secondlook.streamlit.app](https://secondlook.streamlit.app) · **Written summary:** [docs/SecondLook - Summary.pdf](docs/SecondLook%20-%20Summary.pdf)
 
+## Watch the 30-second intro
+
+<a href="docs/media/secondlook_ad_30s.mp4"><img src="docs/media/secondlook_ad_poster.png" alt="Watch the SecondLook 30-second intro video" width="720"></a>
+
+*Click the image to play the video (30s, with sound). The animation source is in [docs/media/ad-source](docs/media/ad-source).*
+
 ## Problem
 
 About half of Filipino adults have no formal financial account, and thin credit files get many of them declined with no explanation.
